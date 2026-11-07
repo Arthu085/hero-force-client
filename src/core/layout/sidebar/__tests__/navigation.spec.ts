@@ -1,6 +1,7 @@
 import { HomeOutlined } from '@ant-design/icons';
 import { describe, expect, it } from 'vitest';
 import {
+  activeNavigationPath,
   type NavigationItem,
   type NavigationSection,
   visibleNavigationItems,
@@ -56,5 +57,29 @@ describe('visibleNavigationSections', () => {
     expect(
       visibleNavigationSections(sections, []).map(({ labelKey }) => labelKey),
     ).toEqual(['navigationSections.general']);
+  });
+});
+
+describe('activeNavigationPath', () => {
+  const sections: NavigationSection[] = [
+    {
+      labelKey: 'navigationSections.projects',
+      items: [
+        { path: '/projects', labelKey: 'navigation.home', icon: HomeOutlined },
+      ],
+    },
+    { labelKey: 'navigationSections.administration', items: [items[1]] },
+  ];
+
+  it('marks the entry of a nested page as active', () => {
+    expect(activeNavigationPath(sections, '/projects/some-uuid')).toBe(
+      '/projects',
+    );
+    expect(activeNavigationPath(sections, '/users')).toBe('/users');
+  });
+
+  it('ignores paths that only share a prefix', () => {
+    expect(activeNavigationPath(sections, '/projects-archive')).toBeUndefined();
+    expect(activeNavigationPath(sections, '/account')).toBeUndefined();
   });
 });

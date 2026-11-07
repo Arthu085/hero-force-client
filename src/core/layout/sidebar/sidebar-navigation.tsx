@@ -4,7 +4,11 @@ import { Link, useLocation } from 'react-router';
 import { env } from '@/core/config/env.config';
 import { AppRoutes } from '@/core/router/app-routes';
 import { useAbilities } from '@/modules/authorization/infra/abilities.queries';
-import { navigationSections, visibleNavigationSections } from './navigation';
+import {
+  activeNavigationPath,
+  navigationSections,
+  visibleNavigationSections,
+} from './navigation';
 import { SidebarLogoutButton } from './sidebar-logout-button';
 import { SidebarThemeToggle } from './sidebar-theme-toggle';
 import { useOpenSections } from './use-open-sections';
@@ -26,8 +30,9 @@ export const SidebarNavigation = ({
   const { data: abilities = [] } = useAbilities();
 
   const sections = visibleNavigationSections(navigationSections, abilities);
+  const activePath = activeNavigationPath(sections, pathname);
   const activeSectionKey = sections.find(({ items }) =>
-    items.some(({ path }) => path === pathname),
+    items.some(({ path }) => path === activePath),
   )?.labelKey;
   const { openKeys, setOpenKeys } = useOpenSections(activeSectionKey);
 
@@ -81,7 +86,7 @@ export const SidebarNavigation = ({
       >
         <Menu
           mode="inline"
-          selectedKeys={[pathname]}
+          selectedKeys={activePath ? [activePath] : []}
           openKeys={openKeys}
           onOpenChange={setOpenKeys}
           items={menuItems}
