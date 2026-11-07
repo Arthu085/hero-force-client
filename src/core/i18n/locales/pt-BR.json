@@ -135,6 +135,14 @@
       "IN_PROGRESS": "Em andamento",
       "COMPLETED": "Concluído"
     },
+    "goalTypes": {
+      "AGILITY": "Agilidade",
+      "DELIGHT": "Encantamento",
+      "EFFICIENCY": "Eficiência",
+      "EXCELLENCE": "Excelência",
+      "TRANSPARENCY": "Transparência",
+      "AMBITION": "Ambição"
+    },
     "filters": {
       "anyStatus": "Todos"
     },
@@ -150,6 +158,8 @@
     },
     "progressOf": "Progresso de {{name}}",
     "actions": {
+      "viewDetails": "Ver detalhes",
+      "details": "Ver detalhes de {{name}}",
       "edit": "Editar {{name}}",
       "delete": "Excluir {{name}}",
       "editProject": "Editar",

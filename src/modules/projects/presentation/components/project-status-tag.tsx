@@ -5,6 +5,7 @@ import {
 } from '@ant-design/icons';
 import { Tag } from 'antd';
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ProjectStatus } from '../../domain/project.schema';
 
 const statusAppearance: Record<
@@ -18,14 +19,17 @@ const statusAppearance: Record<
 
 interface ProjectStatusTagProps {
   status: ProjectStatus;
-  label: string;
 }
 
-export const ProjectStatusTag = ({ status, label }: ProjectStatusTagProps) => (
-  <Tag
-    color={statusAppearance[status].color}
-    icon={statusAppearance[status].icon}
-  >
-    {label}
-  </Tag>
-);
+export const ProjectStatusTag = ({ status }: ProjectStatusTagProps) => {
+  const { t } = useTranslation();
+
+  return (
+    <Tag
+      color={statusAppearance[status].color}
+      icon={statusAppearance[status].icon}
+    >
+      {t(`projects.status.${status}`)}
+    </Tag>
+  );
+};

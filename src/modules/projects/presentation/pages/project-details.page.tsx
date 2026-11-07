@@ -73,10 +73,7 @@ const ProjectDetailsContent = ({ project }: { project: ProjectDetail }) => {
           <Typography.Title level={2} style={{ margin: 0 }}>
             {project.name}
           </Typography.Title>
-          <ProjectStatusTag
-            status={project.status}
-            label={project.statusLabel}
-          />
+          <ProjectStatusTag status={project.status} />
         </Flex>
         <Flex gap="small" wrap>
           {can('UPDATE') && (
@@ -177,12 +174,16 @@ const ProjectDetailsContent = ({ project }: { project: ProjectDetail }) => {
       </Row>
       <Card title={t('projects.goals.title')}>
         <Flex vertical gap="large">
-          {project.goals.map(({ goal, goalLabel, description, progress }) => (
+          {project.goals.map(({ goal, description, progress }) => (
             <Flex key={goal} vertical gap={4}>
-              <Typography.Text strong>{goalLabel}</Typography.Text>
+              <Typography.Text strong>
+                {t(`projects.goalTypes.${goal}`)}
+              </Typography.Text>
               <ProjectProgress
                 percent={progress}
-                label={t('projects.goals.progressOf', { goal: goalLabel })}
+                label={t('projects.goals.progressOf', {
+                  goal: t(`projects.goalTypes.${goal}`),
+                })}
               />
               <Typography.Text type="secondary">
                 {description ?? t('projects.goals.noDescription')}

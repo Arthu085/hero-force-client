@@ -317,8 +317,9 @@ same screens serve both and the frontend never filters by role.
 - **Dashboard:** `/projects`, behind `AbilityGuard` with `READ` on `PROJECT`, shows five indicators from `GET /projects/statistics` (total, pending, in progress,
   completed, and average progress), then the paginated project list with name search, a status
   filter, server-side sorting on every column, and URL-synced state. Each row shows the status tag,
-  a progress bar, and the responsible hero as `Real Name (Character Name)` with their avatar; the
-  name links to the details page.
+  a progress bar, and the responsible hero as `Real Name (Character Name)` with their avatar. The
+  actions column always shows a View details link to the details page, also reachable through the
+  project name, next to edit and delete when the user may use them.
 - **Responsible hero:** `HeroSelect` searches `GET /projects/heroes` on the server and always keeps
   the current hero as an option, so the user directory (`READ` on `USER`) is not needed. The API
   lists heroes only to callers holding the `ADMIN` role (with `READ` on `PROJECT`), so the hero
@@ -334,6 +335,10 @@ same screens serve both and the frontend never filters by role.
 - **Goals:** the goals modal edits all six goals at once, each with a slider and a number input
   (integers 0–100) and an optional description; a blank description is sent as `null`. Overall
   progress and status are derived by the API and never edited.
+- **Labels:** statuses and goals are shown through the `projects.status` and `projects.goalTypes`
+  translations keyed by their enum values, so every screen follows the selected language at once
+  and never shows a raw enum value. The API's `statusLabel` and `goalLabel` stay in the schemas
+  but are not displayed.
 
 ### Users
 
