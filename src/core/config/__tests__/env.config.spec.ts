@@ -1,34 +1,37 @@
-import { describe, expect, it } from 'vitest';
-import { parseEnv } from '../env.config';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const validSource = {
-  VITE_API_URL: 'https://api.example.com',
-  VITE_APP_NAME: 'Acme Portal',
-  VITE_APP_MARK: 'AP',
-};
+describe('browser environment startup', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.stubEnv('VITE_APP_NAME', 'Hero Force');
+    vi.stubEnv('VITE_APP_MARK', 'HF');
+  });
 
-describe('parseEnv', () => {
-  it('exposes the configuration with the API URL trimmed of trailing slashes', () => {
-    expect(
-      parseEnv({ ...validSource, VITE_API_URL: 'https://api.example.com//' }),
-    ).toEqual({
-      apiUrl: 'https://api.example.com',
-      appName: 'Acme Portal',
-      appMark: 'AP',
-    });
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it.each([
-    ['VITE_API_URL', undefined],
-    ['VITE_API_URL', ''],
-    ['VITE_API_URL', 'not-a-url'],
-    ['VITE_APP_NAME', undefined],
-    ['VITE_APP_NAME', '  '],
-    ['VITE_APP_MARK', undefined],
-    ['VITE_APP_MARK', ''],
-  ])('rejects %s set to %o', (key, value) => {
-    expect(() => parseEnv({ ...validSource, [key]: value })).toThrow(
-      new RegExp(key),
-    );
+    ['https://hero.example.com///', 'https://hero.example.com'],
+    ['http://localhost:3000/', 'http://localhost:3000'],
+  ])('starts with the normalized origin %s', async (value, origin) => {
+    vi.stubEnv('VITE_API_URL', value);
+
+    const { env } = await import('../env.config');
+
+    expect(env.apiUrl).toBe(origin);
+  });
+
+  it.each([
+    'https://hero.example.com/api',
+    'http://hero.example.com',
+    'https://user:password@hero.example.com',
+    'https://hero.example.com?preview=true',
+    'https://hero.example.com#section',
+    'ftp://hero.example.com',
+  ])('rejects %s before startup', async (value) => {
+    vi.stubEnv('VITE_API_URL', value);
+
+    await expect(import('../env.config')).rejects.toThrow(/VITE_API_URL/);
   });
 });
