@@ -47,7 +47,7 @@ jobs:
     name: API integration tests
     runs-on: ubuntu-latest
     env:
-      BACKEND_REPOSITORY: ${{ vars.BACKEND_REPOSITORY || format('{0}/backend-template', github.repository_owner) }}
+      BACKEND_REPOSITORY: ${{ vars.BACKEND_REPOSITORY || format('{0}/hero-force-api', github.repository_owner) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -109,4 +109,4 @@ jobs:
         run: npm run test:integration
         working-directory: frontend
         env:
-          BACKEND_TEMPLATE_PATH: ../backend
+          BACKEND_PATH: ../backend

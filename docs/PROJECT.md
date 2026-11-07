@@ -5,8 +5,8 @@ Purpose, current scope, architecture, and source layout. Engineering rules are i
 
 ## Purpose
 
-A reusable React web template for the
-[backend-template](https://github.com/Arthu085/backend-template) REST API.
+The Hero Force web client for the
+[hero-force-api](https://github.com/Arthu085/hero-force-api) REST API.
 
 ## Stack
 

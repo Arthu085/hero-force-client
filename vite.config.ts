@@ -51,8 +51,8 @@ export default defineConfig(({ mode }) => {
       },
       env: {
         VITE_API_URL: 'http://localhost:3000',
-        VITE_APP_NAME: 'Frontend Template',
-        VITE_APP_MARK: 'FT',
+        VITE_APP_NAME: 'Hero Force',
+        VITE_APP_MARK: 'HF',
       },
       restoreMocks: true,
     },

@@ -5,16 +5,14 @@ import type { TestProject } from 'vitest/node';
 import { backendFixtureSchema } from './context.ts';
 
 export default async function setup(project: TestProject) {
-  const backendPath = resolve(
-    process.env.BACKEND_TEMPLATE_PATH ?? '../backend-template',
-  );
+  const backendPath = resolve(process.env.BACKEND_PATH ?? '../hero-force-api');
   const serverPath = resolve(backendPath, 'test/frontend/server.ts');
 
   try {
     await access(serverPath);
   } catch {
     throw new Error(
-      'Set BACKEND_TEMPLATE_PATH to a backend-template checkout containing test/frontend/server.ts, and install its dependencies with npm ci.',
+      'Set BACKEND_PATH to a hero-force-api checkout containing test/frontend/server.ts, and install its dependencies with npm ci.',
     );
   }
 
