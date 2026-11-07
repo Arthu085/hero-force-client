@@ -328,10 +328,12 @@ same screens serve both and the frontend never filters by role.
   lists heroes only to callers holding the `ADMIN` role (with `READ` on `PROJECT`), so the hero
   filter is shown only to a user holding `ADMIN`, and regular users never call that route. The
   selector appears in the project form, which needs `CREATE` or `UPDATE` on `PROJECT`.
-- **Managing:** `CREATE` on `PROJECT` shows New project; `UPDATE` shows edit (the form loads the
-  detail first and sends only changed fields, which is how a hero is reassigned) and Edit goals,
-  placed on the details page's Goals card;
-  `DELETE` shows delete with confirmation. Without those abilities the screens are read-only.
+- **Managing:** project management is reserved to administrators, as the API enforces:
+  `useProjectPermissions` requires the `ADMIN` role and the matching ability on `PROJECT`, so a
+  regular user stays read-only even when their role is granted write abilities. `CREATE` shows New
+  project; `UPDATE` shows edit (the form loads the detail first and sends only changed fields, which
+  is how a hero is reassigned) and Edit goals, placed on the details page's Goals card; `DELETE`
+  shows delete with confirmation. Without them the screens are read-only.
 - **Details:** `/projects/:uuid` (guarded by `READ` on `PROJECT`) shows the description, the hero,
   the dates, the overall progress, and each goal with its progress and description. A project
   outside the user's scope answers `404`, shown as an inline error. Deleting from this page

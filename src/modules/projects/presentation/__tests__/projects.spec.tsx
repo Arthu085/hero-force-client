@@ -391,18 +391,34 @@ describe('Projects dashboard', () => {
     expect(sent('GET /projects/heroes')).toHaveLength(0);
   });
 
-  it('shows the hero filter only to a user holding the ADMIN role', async () => {
-    renderProjects(AppRoutes.PROJECTS, { roles: [userRole] });
+  it('keeps a regular user read-only even when granted project write abilities', async () => {
+    const { sent } = renderProjects(AppRoutes.PROJECTS, { roles: [userRole] });
 
-    await findProjectRow();
+    const row = await findProjectRow();
     expect(
-      screen.getByRole('button', { name: createButtonName() }),
+      within(row).getByRole('link', {
+        name: i18n.t('projects.actions.details', { name: project.name }),
+      }),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: createButtonName() }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(row).queryByRole('button', {
+        name: i18n.t('projects.actions.edit', { name: project.name }),
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(row).queryByRole('button', {
+        name: i18n.t('projects.actions.delete', { name: project.name }),
+      }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('combobox', {
         name: i18n.t('projects.fields.responsible'),
       }),
     ).not.toBeInTheDocument();
+    expect(sent('GET /projects/heroes')).toHaveLength(0);
   });
 
   it('lets an administrator filter by responsible hero', async () => {
@@ -592,6 +608,21 @@ describe('Project details', () => {
         name: new RegExp(i18n.t('common.delete')),
       }),
     ).not.toBeInTheDocument();
+  });
+
+  it('hides project management from a regular user granted write abilities', async () => {
+    renderProjects(projectDetailsPath(project.uuid), { roles: [userRole] });
+
+    await screen.findByRole('heading', { name: project.name });
+    for (const name of [
+      i18n.t('projects.actions.editProject'),
+      i18n.t('projects.actions.editGoals'),
+      i18n.t('common.delete'),
+    ]) {
+      expect(
+        screen.queryByRole('button', { name: new RegExp(name) }),
+      ).not.toBeInTheDocument();
+    }
   });
 
   it('translates the status and goals when the language changes', async () => {

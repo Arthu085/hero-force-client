@@ -21,8 +21,6 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router';
 import { getApiErrorMessage } from '@/core/http/api-error';
 import { AppRoutes } from '@/core/router/app-routes';
-import { hasAbility } from '@/modules/authorization/domain/ability.schema';
-import { useAbilities } from '@/modules/authorization/infra/abilities.queries';
 import { useFeedbackModal } from '@/shared/feedback/use-feedback-modal';
 import type { ProjectDetail } from '../../domain/project.schema';
 import { useDeleteProject, useProject } from '../../infra/projects.queries';
@@ -31,6 +29,7 @@ import { ProjectGoalsModal } from '../components/project-goals.modal';
 import { ProjectHeroLabel } from '../components/project-hero-label';
 import { ProjectProgress } from '../components/project-progress';
 import { ProjectStatusTag } from '../components/project-status-tag';
+import { useProjectPermissions } from '../use-project-permissions';
 
 export const ProjectDetailsPage = () => {
   const { uuid = '' } = useParams();
@@ -55,13 +54,10 @@ const ProjectDetailsContent = ({ project }: { project: ProjectDetail }) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { showError } = useFeedbackModal();
-  const { data: abilities = [] } = useAbilities();
+  const { canManage } = useProjectPermissions();
   const deleteMutation = useDeleteProject();
   const [editing, setEditing] = useState(false);
   const [editingGoals, setEditingGoals] = useState(false);
-
-  const can = (action: 'UPDATE' | 'DELETE') =>
-    hasAbility(abilities, { action, subject: 'PROJECT' });
 
   const formatDate = (value: string) =>
     new Date(value).toLocaleString(i18n.language);
@@ -76,12 +72,12 @@ const ProjectDetailsContent = ({ project }: { project: ProjectDetail }) => {
           <ProjectStatusTag status={project.status} />
         </Flex>
         <Flex gap="small" wrap>
-          {can('UPDATE') && (
+          {canManage('UPDATE') && (
             <Button icon={<EditOutlined />} onClick={() => setEditing(true)}>
               {t('projects.actions.editProject')}
             </Button>
           )}
-          {can('DELETE') && (
+          {canManage('DELETE') && (
             <Popconfirm
               title={t('projects.delete.title')}
               description={t('projects.delete.description', {
@@ -167,7 +163,7 @@ const ProjectDetailsContent = ({ project }: { project: ProjectDetail }) => {
       <Card
         title={t('projects.goals.title')}
         extra={
-          can('UPDATE') && (
+          canManage('UPDATE') && (
             <Button
               type="primary"
               icon={<AimOutlined />}
