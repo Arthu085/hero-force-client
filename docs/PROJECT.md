@@ -545,7 +545,7 @@ change the SVG wordmark. `VITE_APP_MARK` supplies the installed PWA's short name
 - **Manifest:** generated from `VITE_APP_NAME` (`name`) and `VITE_APP_MARK`
   (`short_name`), with `display: standalone`, `lang: pt-BR`, and white theme and background colors.
   `index.html` declares a white or black `theme-color` per `prefers-color-scheme`.
-- **Icons:** `public/favicon.svg` contains the HF shield on a white background and is the source
+- **Icons:** `public/favicon.svg` contains the HF shield on a transparent background and is the source
   image for generated app icons. `@vite-pwa/assets-generator` (`minimal-2023` preset) generates the favicon, PWA, maskable, and
   Apple touch icons, served by the dev server and written by the build, which also injects their
   `<link>` tags into `index.html`. Replace the SVG to rebrand; the generated PNGs are not committed.
