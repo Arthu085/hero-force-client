@@ -146,6 +146,11 @@
     "filters": {
       "anyStatus": "All"
     },
+    "empty": {
+      "all": "No projects yet.",
+      "assigned": "No projects have been assigned to you yet.",
+      "filtered": "No projects match the filters."
+    },
     "statistics": {
       "total": "Projects",
       "pending": "Pending",

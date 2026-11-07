@@ -59,3 +59,15 @@ export const visibleNavigationSections = (
       items: visibleNavigationItems(section.items, abilities),
     }))
     .filter(({ items }) => items.length > 0);
+
+const matchesPath = (path: string, pathname: string) =>
+  pathname === path || pathname.startsWith(`${path}/`);
+
+export const activeNavigationPath = (
+  sections: readonly NavigationSection[],
+  pathname: string,
+): string | undefined =>
+  sections
+    .flatMap(({ items }) => items.map(({ path }) => path))
+    .filter((path) => matchesPath(path, pathname))
+    .sort((left, right) => right.length - left.length)[0];
