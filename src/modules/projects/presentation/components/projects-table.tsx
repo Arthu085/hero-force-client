@@ -96,9 +96,7 @@ export const ProjectsTable = ({
       title: t('projects.fields.status'),
       dataIndex: 'status',
       ...listSorting.columnSorting('status'),
-      render: (_, { status, statusLabel }) => (
-        <ProjectStatusTag status={status} label={statusLabel} />
-      ),
+      render: (_, { status }) => <ProjectStatusTag status={status} />,
     },
     {
       title: t('projects.fields.progress'),

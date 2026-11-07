@@ -1,6 +1,12 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import type { InternalAxiosRequestConfig } from 'axios';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { httpClient } from '@/core/http/http-client';
 import i18n from '@/core/i18n/i18n.config';
@@ -18,11 +24,13 @@ import {
   stubHttpRoutes,
 } from '@/test/http-stub';
 import { renderRoute } from '@/test/render-route';
-import type {
-  ProjectDetail,
-  ProjectHero,
-  ProjectListItem,
-  ProjectStatistics,
+import {
+  type ProjectDetail,
+  type ProjectGoal,
+  projectGoalTypeSchema,
+  type ProjectHero,
+  type ProjectListItem,
+  type ProjectStatistics,
 } from '../../domain/project.schema';
 
 const adminRole: Role = {
@@ -68,32 +76,25 @@ const grace: ProjectHero = {
   character: null,
 };
 
+// The API labels repeat the raw enum values, as its untranslated fallback does,
+// so these tests prove the client translates statuses and goals by itself.
 const project: ProjectListItem = {
   uuid: '3d6f0a8e-9b1c-4e2d-8f7a-5c4b3a2d1e0f',
   name: 'Web Shooter',
   status: 'IN_PROGRESS',
-  statusLabel: 'Em andamento',
+  statusLabel: 'IN_PROGRESS',
   progress: 33,
   responsible: peter,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-02T00:00:00.000Z',
 };
 
-const goalLabels = {
-  AGILITY: 'Agilidade',
-  DELIGHT: 'Encantamento',
-  EFFICIENCY: 'Eficiência',
-  EXCELLENCE: 'Excelência',
-  TRANSPARENCY: 'Transparência',
-  AMBITION: 'Ambição',
-} as const;
-
 const projectDetail: ProjectDetail = {
   ...project,
   description: 'Build a better web shooter.',
-  goals: Object.entries(goalLabels).map(([goal, goalLabel], index) => ({
-    goal: goal as keyof typeof goalLabels,
-    goalLabel,
+  goals: projectGoalTypeSchema.options.map((goal, index) => ({
+    goal,
+    goalLabel: goal,
     description: index === 0 ? 'Ship weekly' : null,
     progress: index === 0 ? 100 : index === 1 ? 100 : 0,
   })),
@@ -106,6 +107,9 @@ const statistics: ProjectStatistics = {
   completed: 1,
   averageProgress: 42,
 };
+
+const goalLabel = (goal: ProjectGoal['goal']) =>
+  i18n.t(`projects.goalTypes.${goal}`);
 
 const projectAbilities = (actions: Ability['action'][]): Ability[] =>
   actions.map((action) => ({ action, subject: 'PROJECT' }));
@@ -295,7 +299,7 @@ describe('Projects dashboard', () => {
       within(row).getByRole('link', { name: project.name }),
     ).toHaveAttribute('href', projectDetailsPath(project.uuid));
     expect(row).toHaveTextContent('Peter Parker (Spider-Man)');
-    expect(row).toHaveTextContent(project.statusLabel);
+    expect(row).toHaveTextContent(i18n.t('projects.status.IN_PROGRESS'));
     expect(
       within(row).getByRole('progressbar', {
         name: i18n.t('projects.progressOf', { name: project.name }),
@@ -532,6 +536,10 @@ describe('Projects dashboard', () => {
 });
 
 describe('Project details', () => {
+  afterEach(async () => {
+    await i18n.changeLanguage('pt-BR');
+  });
+
   it('shows the description, hero, overall progress, and every goal', async () => {
     renderProjects(projectDetailsPath(project.uuid), {
       roles: [userRole],
@@ -545,10 +553,10 @@ describe('Project details', () => {
     expect(main).toHaveTextContent(projectDetail.description);
     expect(main).toHaveTextContent('Peter Parker (Spider-Man)');
     expect(main).toHaveTextContent('Ship weekly');
-    for (const goalLabel of Object.values(goalLabels)) {
+    for (const goal of projectGoalTypeSchema.options) {
       expect(
         within(main).getByRole('progressbar', {
-          name: i18n.t('projects.goals.progressOf', { goal: goalLabel }),
+          name: i18n.t('projects.goals.progressOf', { goal: goalLabel(goal) }),
         }),
       ).toBeInTheDocument();
     }
@@ -562,6 +570,47 @@ describe('Project details', () => {
         name: new RegExp(i18n.t('common.delete')),
       }),
     ).not.toBeInTheDocument();
+  });
+
+  it('translates the status and goals when the language changes', async () => {
+    await act(() => i18n.changeLanguage('pt-BR'));
+    renderProjects(projectDetailsPath(project.uuid), {
+      roles: [userRole],
+      abilities: projectAbilities(['READ']),
+    });
+
+    await screen.findByRole('heading', { name: project.name });
+    const main = screen.getByRole('main');
+    const expectLabels = (status: string, goals: string[]) => {
+      expect(main).toHaveTextContent(status);
+      for (const goal of goals) {
+        expect(main).toHaveTextContent(goal);
+      }
+    };
+
+    expectLabels('Em andamento', [
+      'Agilidade',
+      'Encantamento',
+      'Eficiência',
+      'Excelência',
+      'Transparência',
+      'Ambição',
+    ]);
+    expect(main).not.toHaveTextContent(project.status);
+    for (const goal of projectGoalTypeSchema.options) {
+      expect(main).not.toHaveTextContent(goal);
+    }
+
+    await act(() => i18n.changeLanguage('en'));
+
+    expectLabels('In progress', [
+      'Agility',
+      'Delight',
+      'Efficiency',
+      'Excellence',
+      'Transparency',
+      'Ambition',
+    ]);
   });
 
   it('shows the API error for a project outside the hero scope', async () => {
@@ -600,7 +649,7 @@ describe('Project details', () => {
       i18n.t('projects.goals.editTitle', { name: project.name }),
     );
     const ambition = within(dialog).getByLabelText(
-      i18n.t('projects.goals.progressValueOf', { goal: goalLabels.AMBITION }),
+      i18n.t('projects.goals.progressValueOf', { goal: goalLabel('AMBITION') }),
     );
     fireEvent.change(ambition, { target: { value: '55' } });
     fireEvent.blur(ambition);

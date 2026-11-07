@@ -135,6 +135,14 @@
       "IN_PROGRESS": "In progress",
       "COMPLETED": "Completed"
     },
+    "goalTypes": {
+      "AGILITY": "Agility",
+      "DELIGHT": "Delight",
+      "EFFICIENCY": "Efficiency",
+      "EXCELLENCE": "Excellence",
+      "TRANSPARENCY": "Transparency",
+      "AMBITION": "Ambition"
+    },
     "filters": {
       "anyStatus": "All"
     },

@@ -335,6 +335,10 @@ same screens serve both and the frontend never filters by role.
 - **Goals:** the goals modal edits all six goals at once, each with a slider and a number input
   (integers 0–100) and an optional description; a blank description is sent as `null`. Overall
   progress and status are derived by the API and never edited.
+- **Labels:** statuses and goals are shown through the `projects.status` and `projects.goalTypes`
+  translations keyed by their enum values, so every screen follows the selected language at once
+  and never shows a raw enum value. The API's `statusLabel` and `goalLabel` stay in the schemas
+  but are not displayed.
 
 ### Users
 
