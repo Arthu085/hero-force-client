@@ -1,6 +1,6 @@
-import { Card, Flex, Typography } from 'antd';
+import { Card, Flex } from 'antd';
 import { Outlet } from 'react-router';
-import { env } from '@/core/config/env.config';
+import { BrandLogo } from '@/core/branding/brand-logo';
 import { LanguageSwitcher } from '@/core/i18n/language-switcher';
 import { OfflineAlert } from '@/core/pwa/offline-alert';
 import { ThemeToggle } from '@/core/theme/theme-toggle';
@@ -14,7 +14,7 @@ export const AuthLayout = () => (
     <Card style={{ width: '100%', maxWidth: 400 }}>
       <Flex vertical gap="large">
         <Flex align="center" justify="space-between" gap="small">
-          <Typography.Text strong>{env.appName}</Typography.Text>
+          <BrandLogo />
           <LanguageSwitcher />
         </Flex>
         <OfflineAlert />

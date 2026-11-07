@@ -79,11 +79,11 @@ All frontend variables are listed in [`.env.example`](.env.example) and validate
 startup in [`src/core/config/env.config.ts`](src/core/config/env.config.ts). Invalid values stop the
 application. `VITE_*` values are embedded in the browser bundle and must never contain secrets.
 
-| Variable        | Required | Example                 | Purpose                                          |
-| --------------- | -------- | ----------------------- | ------------------------------------------------ |
-| `VITE_API_URL`  | Yes      | `http://localhost:3000` | API base URL without the `/api` prefix           |
-| `VITE_APP_NAME` | Yes      | `Hero Force`            | Application name for the browser tab and layouts |
-| `VITE_APP_MARK` | Yes      | `HF`                    | Short mark shown in the collapsed sidebar        |
+| Variable        | Required | Example                 | Purpose                                                            |
+| --------------- | -------- | ----------------------- | ------------------------------------------------------------------ |
+| `VITE_API_URL`  | Yes      | `http://localhost:3000` | API base URL without the `/api` prefix                             |
+| `VITE_APP_NAME` | Yes      | `Hero Force`            | Application name for the browser tab, accessible branding, and PWA |
+| `VITE_APP_MARK` | Yes      | `HF`                    | Short name for the installed PWA                                   |
 
 These values are read when Vite starts or builds; restart the development server or rebuild after
 changing them.

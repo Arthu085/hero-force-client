@@ -258,7 +258,9 @@ describe('MainLayout', () => {
 
     await sidebarToggle();
     expect(titleLink()).toHaveAttribute('href', AppRoutes.ROOT);
-    expect(titleLink()).toHaveTextContent(env.appName);
+    expect(
+      within(titleLink()).getByRole('img', { name: env.appName }),
+    ).toHaveAttribute('src', '/logo.svg');
   });
 
   it('opens the sidebar by default and remembers when it is collapsed', async () => {
@@ -274,7 +276,9 @@ describe('MainLayout', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
     expect(localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY)).toBe('true');
     expect(titleLink()).toHaveAttribute('href', AppRoutes.ROOT);
-    expect(titleLink()).toHaveTextContent(env.appMark);
+    expect(
+      within(titleLink()).getByRole('img', { name: env.appName }),
+    ).toHaveAttribute('src', '/logo-icon.svg');
     expect(
       screen.queryByText(i18n.t('navigationSections.general')),
     ).not.toBeInTheDocument();
@@ -314,7 +318,9 @@ describe('MainLayout', () => {
       name: i18n.t('layout.navigation'),
     });
     expect(toggle).toHaveAttribute('aria-controls', drawer.id);
-    expect(titleLink()).toHaveTextContent(env.appName);
+    expect(
+      within(titleLink()).getByRole('img', { name: env.appName }),
+    ).toHaveAttribute('src', '/logo.svg');
     expect(
       within(drawer).getByRole('button', {
         name: i18n.t('theme.switchToDark'),

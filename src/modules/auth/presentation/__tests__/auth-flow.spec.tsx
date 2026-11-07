@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { getAdapter } from 'axios';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { env } from '@/core/config/env.config';
 import { httpClient } from '@/core/http/http-client';
 import i18n from '@/core/i18n/i18n.config';
 import { AppRoutes } from '@/core/router/app-routes';
@@ -157,6 +158,10 @@ describe('LoginPage', () => {
     renderRoute(AppRoutes.LOGIN);
 
     await screen.findByRole('heading', { name: i18n.t('auth.login.title') });
+    expect(screen.getByRole('img', { name: env.appName })).toHaveAttribute(
+      'src',
+      '/logo.svg',
+    );
     const requestsBeforeSubmit = requests.length;
     submit(i18n.t('auth.login.submit'));
 
