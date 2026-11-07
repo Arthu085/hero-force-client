@@ -251,13 +251,13 @@ describe('MainLayout', () => {
     expect(logoutButton).not.toHaveTextContent(i18n.t('auth.logout'));
   });
 
-  it('links the sidebar title to the home page', async () => {
+  it('links the sidebar title to the default landing page', async () => {
     stubHttpRoutes(httpClient, signedInRoutes);
 
     renderRoute(AppRoutes.USERS);
 
     await sidebarToggle();
-    expect(titleLink()).toHaveAttribute('href', AppRoutes.HOME);
+    expect(titleLink()).toHaveAttribute('href', AppRoutes.ROOT);
     expect(titleLink()).toHaveTextContent(env.appName);
   });
 
@@ -273,7 +273,7 @@ describe('MainLayout', () => {
 
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
     expect(localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY)).toBe('true');
-    expect(titleLink()).toHaveAttribute('href', AppRoutes.HOME);
+    expect(titleLink()).toHaveAttribute('href', AppRoutes.ROOT);
     expect(titleLink()).toHaveTextContent(env.appMark);
     expect(
       screen.queryByText(i18n.t('navigationSections.general')),

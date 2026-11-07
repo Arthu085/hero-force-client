@@ -1,4 +1,8 @@
-import { SafetyCertificateOutlined, TeamOutlined } from '@ant-design/icons';
+import {
+  DashboardOutlined,
+  SafetyCertificateOutlined,
+  TeamOutlined,
+} from '@ant-design/icons';
 import type { ParseKeys } from 'i18next';
 import type { ComponentType } from 'react';
 import type { Ability } from '@/modules/authorization/domain/ability.schema';
@@ -23,4 +27,11 @@ export const rolesPage = {
   labelKey: 'navigation.roles',
   icon: SafetyCertificateOutlined,
   ability: { action: 'READ', subject: 'ROLE' },
+} satisfies PageMetadata;
+
+export const projectsPage = {
+  path: AppRoutes.PROJECTS,
+  labelKey: 'navigation.projectsDashboard',
+  icon: DashboardOutlined,
+  ability: { action: 'READ', subject: 'PROJECT' },
 } satisfies PageMetadata;

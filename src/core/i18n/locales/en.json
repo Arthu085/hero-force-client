@@ -11,6 +11,7 @@
     "greeting": "Hello, {{name}}",
     "description": "Choose where to go.",
     "shortcuts": {
+      "projects": "Track the indicators, the projects, and goal progress.",
       "users": "Create, edit, and deactivate users.",
       "roles": "Review and adjust each role's permissions.",
       "account": "Change your name and email and review your access.",
@@ -48,11 +49,13 @@
   },
   "navigation": {
     "home": "Home",
+    "projectsDashboard": "Dashboard",
     "users": "Users",
     "roles": "Roles"
   },
   "navigationSections": {
     "general": "General",
+    "projects": "Projects",
     "administration": "Administration"
   },
   "feedback": {
@@ -81,7 +84,8 @@
     "subjects": {
       "USER": "Users",
       "ROLE": "Roles",
-      "ABILITY": "Permissions"
+      "ABILITY": "Permissions",
+      "PROJECT": "Projects"
     },
     "noAbilities": "No permissions."
   },
@@ -103,6 +107,73 @@
     },
     "select": {
       "limited": "Only roles from your account and the user being edited are available. Permission to read roles is required to see the complete list."
+    }
+  },
+  "projects": {
+    "title": "Projects",
+    "dashboard": {
+      "title": "Projects dashboard"
+    },
+    "create": {
+      "title": "New project"
+    },
+    "edit": {
+      "title": "Edit project"
+    },
+    "fields": {
+      "name": "Name",
+      "description": "Description",
+      "responsible": "Responsible hero",
+      "status": "Status",
+      "progress": "Progress",
+      "createdAt": "Created at",
+      "updatedAt": "Updated at",
+      "actions": "Actions"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "IN_PROGRESS": "In progress",
+      "COMPLETED": "Completed"
+    },
+    "filters": {
+      "anyStatus": "All"
+    },
+    "statistics": {
+      "total": "Projects",
+      "pending": "Pending",
+      "inProgress": "In progress",
+      "completed": "Completed",
+      "averageProgress": "Average progress"
+    },
+    "heroSelect": {
+      "placeholder": "Search a hero by name"
+    },
+    "progressOf": "Progress of {{name}}",
+    "actions": {
+      "edit": "Edit {{name}}",
+      "delete": "Delete {{name}}",
+      "editProject": "Edit",
+      "editGoals": "Edit goals"
+    },
+    "delete": {
+      "title": "Delete project",
+      "description": "Delete the project {{name}}? It will no longer appear in lists or indicators."
+    },
+    "details": {
+      "back": "Back to dashboard",
+      "overview": "Overview"
+    },
+    "goals": {
+      "title": "Goals",
+      "editTitle": "Goals of {{name}}",
+      "description": "Description",
+      "progress": "Progress",
+      "progressOf": "Progress of {{goal}}",
+      "progressValueOf": "Percentage of {{goal}}",
+      "noDescription": "No description."
+    },
+    "validation": {
+      "progress": "Enter a whole number from 0 to 100."
     }
   },
   "users": {

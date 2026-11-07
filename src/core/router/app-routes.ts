@@ -1,5 +1,10 @@
+import { generatePath } from 'react-router';
+
 export const AppRoutes = {
-  HOME: '/',
+  ROOT: '/',
+  HOME: '/home',
+  PROJECTS: '/projects',
+  PROJECT_DETAILS: '/projects/:uuid',
   USERS: '/users',
   ROLES: '/roles',
   ACCOUNT: '/account',
@@ -12,3 +17,6 @@ export const AppRoutes = {
   RESEND_CONFIRMATION: '/resend-confirmation',
   NOT_FOUND: '*',
 } as const;
+
+export const projectDetailsPath = (uuid: string) =>
+  generatePath(AppRoutes.PROJECT_DETAILS, { uuid });

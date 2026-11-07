@@ -11,6 +11,7 @@
     "greeting": "Olá, {{name}}",
     "description": "Escolha para onde ir.",
     "shortcuts": {
+      "projects": "Acompanhe os indicadores, os projetos e o progresso das metas.",
       "users": "Cadastre, edite e desative usuários.",
       "roles": "Veja e ajuste as permissões de cada perfil.",
       "account": "Altere seu nome e e-mail e veja o seu acesso.",
@@ -48,11 +49,13 @@
   },
   "navigation": {
     "home": "Início",
+    "projectsDashboard": "Dashboard",
     "users": "Usuários",
     "roles": "Perfis"
   },
   "navigationSections": {
     "general": "Geral",
+    "projects": "Projetos",
     "administration": "Administração"
   },
   "feedback": {
@@ -81,7 +84,8 @@
     "subjects": {
       "USER": "Usuários",
       "ROLE": "Perfis",
-      "ABILITY": "Permissões"
+      "ABILITY": "Permissões",
+      "PROJECT": "Projetos"
     },
     "noAbilities": "Nenhuma permissão."
   },
@@ -103,6 +107,73 @@
     },
     "select": {
       "limited": "Apenas os perfis da sua conta e do usuário em edição estão disponíveis. É necessário acesso de leitura aos perfis para ver a lista completa."
+    }
+  },
+  "projects": {
+    "title": "Projetos",
+    "dashboard": {
+      "title": "Dashboard de projetos"
+    },
+    "create": {
+      "title": "Novo projeto"
+    },
+    "edit": {
+      "title": "Editar projeto"
+    },
+    "fields": {
+      "name": "Nome",
+      "description": "Descrição",
+      "responsible": "Herói responsável",
+      "status": "Status",
+      "progress": "Progresso",
+      "createdAt": "Criado em",
+      "updatedAt": "Atualizado em",
+      "actions": "Ações"
+    },
+    "status": {
+      "PENDING": "Pendente",
+      "IN_PROGRESS": "Em andamento",
+      "COMPLETED": "Concluído"
+    },
+    "filters": {
+      "anyStatus": "Todos"
+    },
+    "statistics": {
+      "total": "Projetos",
+      "pending": "Pendentes",
+      "inProgress": "Em andamento",
+      "completed": "Concluídos",
+      "averageProgress": "Progresso médio"
+    },
+    "heroSelect": {
+      "placeholder": "Busque um herói pelo nome"
+    },
+    "progressOf": "Progresso de {{name}}",
+    "actions": {
+      "edit": "Editar {{name}}",
+      "delete": "Excluir {{name}}",
+      "editProject": "Editar",
+      "editGoals": "Editar metas"
+    },
+    "delete": {
+      "title": "Excluir projeto",
+      "description": "Excluir o projeto {{name}}? Ele deixará de aparecer nas listagens e nos indicadores."
+    },
+    "details": {
+      "back": "Voltar ao dashboard",
+      "overview": "Visão geral"
+    },
+    "goals": {
+      "title": "Metas",
+      "editTitle": "Metas de {{name}}",
+      "description": "Descrição",
+      "progress": "Progresso",
+      "progressOf": "Progresso de {{goal}}",
+      "progressValueOf": "Percentual de {{goal}}",
+      "noDescription": "Sem descrição."
+    },
+    "validation": {
+      "progress": "Informe um número inteiro de 0 a 100."
     }
   },
   "users": {

@@ -16,6 +16,16 @@ import {
   updateRoleAbilities,
 } from '@/modules/authorization/infra/roles.api';
 import { fetchCharacters } from '@/modules/characters/infra/characters.api';
+import {
+  createProject,
+  deleteProject,
+  fetchProject,
+  fetchProjectHeroes,
+  fetchProjects,
+  fetchProjectStatistics,
+  updateProject,
+  updateProjectGoals,
+} from '@/modules/projects/infra/projects.api';
 import { userDetailSchema } from '@/modules/users/domain/user.schema';
 import {
   createUser,
@@ -406,6 +416,86 @@ describe('real backend API contracts', () => {
         abilities: original.abilities,
       });
     }
+  });
+
+  it('manages a project, its goals, and the hero-scoped dashboard', async () => {
+    await login(backend.user);
+    const hero = await fetchSessionUser();
+
+    expect(await fetchOwnAbilities()).toContainEqual({
+      action: 'READ',
+      subject: 'PROJECT',
+    });
+    await login(backend.admin);
+    if (!hero) {
+      throw new Error('The backend did not return the regular user session.');
+    }
+
+    const heroes = await fetchProjectHeroes({
+      page: 1,
+      limit: 10,
+      name: hero.name,
+    });
+
+    expect(heroes.data.map(({ uuid }) => uuid)).toContain(hero.uuid);
+
+    const created = await createProject({
+      name: 'Contract Project',
+      description: 'Contract description',
+      responsibleUuid: hero.uuid,
+    });
+
+    try {
+      expect(created.data).toMatchObject({
+        status: 'PENDING',
+        progress: 0,
+        responsible: { uuid: hero.uuid, name: hero.name },
+      });
+      expect(created.data.goals).toHaveLength(6);
+
+      const goals = await updateProjectGoals({
+        uuid: created.data.uuid,
+        goals: [
+          { goal: 'AGILITY', description: 'Contract goal', progress: 100 },
+          { goal: 'DELIGHT', description: null, progress: 50 },
+        ],
+      });
+
+      expect(goals.data).toMatchObject({ status: 'IN_PROGRESS', progress: 25 });
+      expect(
+        (await updateProject({ uuid: created.data.uuid, name: 'Renamed' })).data
+          .name,
+      ).toBe('Renamed');
+      expect(
+        (
+          await fetchProjects({
+            page: 1,
+            limit: 10,
+            status: 'IN_PROGRESS',
+            responsible: hero.uuid,
+            sortBy: 'progress',
+            sortOrder: 'DESC',
+          })
+        ).data.map(({ uuid }) => uuid),
+      ).toContain(created.data.uuid);
+
+      await login(backend.user);
+      expect((await fetchProject(created.data.uuid)).goals[0]).toMatchObject({
+        goal: 'AGILITY',
+        description: 'Contract goal',
+        progress: 100,
+      });
+      expect((await fetchProjectStatistics()).inProgress).toBeGreaterThan(0);
+      await expectApiError(fetchProjectHeroes({ page: 1, limit: 10 }), 403);
+      await expectApiError(
+        updateProject({ uuid: created.data.uuid, name: 'Forbidden' }),
+        403,
+      );
+    } finally {
+      await login(backend.admin);
+      await deleteProject(created.data.uuid);
+    }
+    await expectApiError(fetchProject(created.data.uuid), 404);
   });
 
   it('updates the profile and immediately ends its authenticated session', async () => {
