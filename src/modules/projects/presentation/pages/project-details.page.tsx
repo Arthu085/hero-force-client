@@ -39,7 +39,7 @@ export const ProjectDetailsPage = () => {
 
   return (
     <Flex vertical gap="middle">
-      <Link to={AppRoutes.HOME}>
+      <Link to={AppRoutes.PROJECTS}>
         <ArrowLeftOutlined /> {t('projects.details.back')}
       </Link>
       {isPending && <Skeleton active />}
@@ -104,7 +104,7 @@ const ProjectDetailsContent = ({ project }: { project: ProjectDetail }) => {
               onConfirm={() =>
                 deleteMutation.mutate(project.uuid, {
                   onSuccess: () => {
-                    void navigate(AppRoutes.HOME, { replace: true });
+                    void navigate(AppRoutes.PROJECTS, { replace: true });
                   },
                   onError: showError,
                 })

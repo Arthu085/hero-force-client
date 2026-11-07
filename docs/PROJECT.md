@@ -31,12 +31,12 @@ which manages users at `/users`, lets every signed-in user edit their own profil
 own password at `/account`,
 and lets an admin approve or reject changes another admin requested at `/account/change-requests`.
 The `authorization` module shows each role's permissions at `/roles` and lets a user with the
-ability change them. The `projects` module adds the project dashboard (indicators and the project
-list) and the project details page at `/projects/:uuid`, where administrators also edit the six
-goals. The `home` module's page at `/` is the dashboard: it shows the project dashboard to anyone
-who can read projects and links to every page the user can reach. Its content shows a skeleton
-until the initial abilities query settles, so late permission-based entries do not move existing
-shortcuts. The production build is an installable progressive web app (see
+ability change them. The `projects` module adds the projects dashboard at `/projects`
+(indicators and the project list) and the project details page at `/projects/:uuid`, where
+administrators also edit the six goals. The `home` module's page at `/home` links to every page the
+user can reach. Its shortcut grid shows a skeleton until the initial abilities query settles, so
+late permission-based entries do not move existing shortcuts. `/` sends a signed-in user to the
+projects dashboard, or to Home without `READ` on `PROJECT` (see [Default landing](#default-landing)). The production build is an installable progressive web app (see
 [Progressive web app](#progressive-web-app)).
 
 ## Architecture
@@ -153,8 +153,8 @@ The `auth` module mirrors the API's cookie session; the browser never sees a tok
   login page; on `signed-in` it removes every other cached query and refetches the session, so a
   tab left on a guest page moves into the app.
 - **Guards:** `AuthGuard` wraps protected routes and redirects to `/login`; `GuestGuard` wraps
-  login, registration, forgot-password, and resend-confirmation and always sends a signed-in user home, so every
-  login lands on the home page. Both show a full-page loader while the session loads; the guest guard resolves before
+  login, registration, forgot-password, and resend-confirmation and always sends a signed-in user to
+  `/`, so every login lands on the [default landing](#default-landing) page. Both show a full-page loader while the session loads; the guest guard resolves before
   mounting the authentication card, so the card does not resize around that loader.
 - **Pages:** login, forgot-password, and reset-password (`/reset-password?token=...`, the API's
   default `MAIL_RESET_PASSWORD_PATH`) render inside `AuthLayout`. Reset-password works with or
@@ -165,8 +165,8 @@ The `auth` module mirrors the API's cookie session; the browser never sees a tok
   confirmation. The API always assigns the `USER` role and answers `202` the same way for new and
   existing emails, so the page always ends with a result explaining that the email must be
   confirmed before signing in, with a link back to login. By default the `USER` role grants only
-  `READ` on `PROJECT` (only admins list and manage users), so a self-registered user sees the
-  dashboard with the projects they lead and `/account`, but no Users menu entry or shortcut, and
+  `READ` on `PROJECT` (only admins list and manage users), so a self-registered user lands on the
+  projects dashboard with the projects they lead and can reach Home and `/account`, but no Users menu entry or shortcut, and
   `/users` shows the forbidden page.
 - **Email confirmation:** `/confirm-email?token=...` (the API's default `MAIL_CONFIRM_EMAIL_PATH`)
   confirms the address only when the user clicks its button, so link scanners and repeated effects
@@ -205,7 +205,7 @@ is limited, and avoids a forbidden catalog request. The API still decides whethe
 allowed. Role management is described under
 [Roles](#roles).
 
-`MainLayout` (`src/core/layout/main.layout.tsx`, with header parts in `header/` and sidebar parts in `sidebar/`) wraps every signed-in page: a side menu whose title links home
+`MainLayout` (`src/core/layout/main.layout.tsx`, with header parts in `header/` and sidebar parts in `sidebar/`) wraps every signed-in page: a side menu whose title links to `/` (the default landing)
 and whose bottom holds the theme toggle (see [Theme](#theme)) and a sign-out button, and a header with a sidebar toggle, the language switcher, and a user menu (opened from the user's
 name) that links to the account page and signs out. `MainLayout` only composes `MainSidebar` (side menu or drawer, rendering
 `SidebarNavigation`, `SidebarThemeToggle`, and `SidebarLogoutButton`) and `MainHeader` (sidebar toggle, language switcher,
@@ -218,8 +218,9 @@ title and menu in a drawer from the left, which closes when a link is followed, 
 it, or with Escape, and the header and page use narrower padding. For a user holding `ADMIN`, the
 user menu also links to the change requests page, and a dot on the user's name and a count on that entry show pending
 change requests. Menu
-entries are declared in `sidebar/navigation.ts` as titled sections (`navigationSections`), with shared user
-and role page metadata in `core/router/page-metadata.ts` also used by home shortcuts. Each surface
+entries are declared in `sidebar/navigation.ts` as titled sections (`navigationSections`), with shared user,
+role, and projects page metadata in `core/router/page-metadata.ts` also used by home shortcuts. The
+sections are General (Home), Projects (Dashboard, with `READ` on `PROJECT`), and Administration. Each surface
 keeps its own entries, ordering, and overrides. An entry with an `ability` is shown only when the
 user has it, and while abilities load, only entries without one are shown; a section with no visible
 entry is hidden. In the expanded menu each section is a collapsible submenu: clicking its title
@@ -292,14 +293,20 @@ Shared building blocks for feature pages:
   returns to it. Inline alerts remain for form field validation, failed page or table loads, and
   informational notices.
 
-### Home and dashboard
+### Default landing
 
-`/` is where sign-in lands unless the guards remembered another page (see
-[Authentication](#authentication)); its menu entry is Dashboard. It greets the user by name, shows
-the [project dashboard](#projects) when the user holds `READ` on `PROJECT` (no project request is
-sent otherwise), and below it a card linking to each page they can reach, declared in `home-shortcuts.ts`: Users and Roles with the same abilities as
-their menu entries, My account for everyone, and Change requests only for a user holding `ADMIN`,
-with the pending count. While abilities load, only cards without an ability are shown.
+`/` renders `DefaultLanding` (`core/router/default-landing.tsx`), which waits for the abilities and
+replaces the URL with `/projects` when the user holds `READ` on `PROJECT`, or `/home` otherwise.
+Sign-in, the guest guard, the sidebar title, and the not-found and forbidden pages all point to
+`/`, so they follow the same rule. Home has no ability guard, so a user without `READ` on
+`PROJECT` always ends on it and never loops between redirects.
+
+### Home
+
+`/home` greets the user by name and shows a card linking to each page they can reach, declared in
+`home-shortcuts.ts`: the projects dashboard with `READ` on `PROJECT`, Users and Roles with the same
+abilities as their menu entries, My account for everyone, and Change requests only for a user
+holding `ADMIN`, with the pending count. While abilities load, only cards without an ability are shown.
 
 ### Projects
 
@@ -307,22 +314,23 @@ The `projects` module mirrors the API's `/projects` routes. The API scopes every
 caller: an administrator sees every project, and anyone else only the projects they lead, so the
 same screens serve both and the frontend never filters by role.
 
-- **Dashboard:** five indicators from `GET /projects/statistics` (total, pending, in progress,
+- **Dashboard:** `/projects`, behind `AbilityGuard` with `READ` on `PROJECT`, shows five indicators from `GET /projects/statistics` (total, pending, in progress,
   completed, and average progress), then the paginated project list with name search, a status
   filter, server-side sorting on every column, and URL-synced state. Each row shows the status tag,
   a progress bar, and the responsible hero as `Real Name (Character Name)` with their avatar; the
   name links to the details page.
 - **Responsible hero:** `HeroSelect` searches `GET /projects/heroes` on the server and always keeps
-  the current hero as an option, so the user directory (`READ` on `USER`) is not needed. The hero
-  filter and the selector need `UPDATE` on `PROJECT`, the same ability the API asks for, so regular
-  users never call that route.
+  the current hero as an option, so the user directory (`READ` on `USER`) is not needed. The API
+  lists heroes only to callers holding the `ADMIN` role (with `READ` on `PROJECT`), so the hero
+  filter is shown only to a user holding `ADMIN`, and regular users never call that route. The
+  selector appears in the project form, which needs `CREATE` or `UPDATE` on `PROJECT`.
 - **Managing:** `CREATE` on `PROJECT` shows New project; `UPDATE` shows edit (the form loads the
   detail first and sends only changed fields, which is how a hero is reassigned) and Edit goals;
   `DELETE` shows delete with confirmation. Without those abilities the screens are read-only.
 - **Details:** `/projects/:uuid` (guarded by `READ` on `PROJECT`) shows the description, the hero,
   the dates, the overall progress, and each goal with its progress and description. A project
   outside the user's scope answers `404`, shown as an inline error. Deleting from this page
-  returns to the dashboard.
+  returns to the projects dashboard.
 - **Goals:** the goals modal edits all six goals at once, each with a slider and a number input
   (integers 0–100) and an optional description; a blank description is sent as `null`. Overall
   progress and status are derived by the API and never edited.

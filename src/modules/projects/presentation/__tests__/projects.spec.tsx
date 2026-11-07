@@ -180,9 +180,115 @@ const goalsBodySchema = z.object({
 
 const createButtonName = () => new RegExp(i18n.t('projects.create.title'));
 
+describe('Default landing and navigation', () => {
+  it.each([
+    {
+      label: 'an administrator',
+      roles: [adminRole],
+      abilities: adminAbilities,
+    },
+    {
+      label: 'a regular user',
+      roles: [userRole],
+      abilities: projectAbilities(['READ']),
+    },
+  ])(
+    'opens the projects dashboard for $label with an active session',
+    async ({ roles, abilities }) => {
+      const { router } = renderProjects(AppRoutes.ROOT, { roles, abilities });
+
+      await findProjectRow();
+      expect(router.state.location.pathname).toBe(AppRoutes.PROJECTS);
+      expect(
+        screen.getByRole('heading', {
+          name: i18n.t('projects.dashboard.title'),
+        }),
+      ).toBeInTheDocument();
+    },
+  );
+
+  it('sends a signed-in user from a guest page to the projects dashboard', async () => {
+    const { router } = renderProjects(AppRoutes.LOGIN, {
+      roles: [userRole],
+      abilities: projectAbilities(['READ']),
+    });
+
+    await findProjectRow();
+    expect(router.state.location.pathname).toBe(AppRoutes.PROJECTS);
+  });
+
+  it('opens Home without READ PROJECT and loads no project data', async () => {
+    const { router, sent } = renderProjects(AppRoutes.ROOT, { abilities: [] });
+
+    expect(
+      await screen.findByText(
+        i18n.t('home.greeting', { name: 'Ada Lovelace' }),
+      ),
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(AppRoutes.HOME);
+    expect(sent('GET /projects')).toHaveLength(0);
+    expect(sent('GET /projects/statistics')).toHaveLength(0);
+  });
+
+  it('shows the forbidden page at the dashboard without READ PROJECT', async () => {
+    const { router, sent } = renderProjects(AppRoutes.PROJECTS, {
+      abilities: [],
+    });
+
+    expect(
+      await screen.findByText(i18n.t('forbidden.title')),
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(AppRoutes.PROJECTS);
+    expect(sent('GET /projects')).toHaveLength(0);
+  });
+
+  it('keeps Home under General and the dashboard under Projects', async () => {
+    renderProjects(AppRoutes.PROJECTS);
+
+    const navigation = await screen.findByRole('navigation', {
+      name: i18n.t('layout.navigation'),
+    });
+    expect(
+      await within(navigation).findByRole('menuitem', {
+        name: i18n.t('navigationSections.projects'),
+      }),
+    ).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      await within(navigation).findByRole('link', {
+        name: i18n.t('navigation.projectsDashboard'),
+      }),
+    ).toHaveAttribute('href', AppRoutes.PROJECTS);
+
+    fireEvent.click(
+      within(navigation).getByRole('menuitem', {
+        name: i18n.t('navigationSections.general'),
+      }),
+    );
+    expect(
+      await within(navigation).findByRole('link', {
+        name: i18n.t('navigation.home'),
+      }),
+    ).toHaveAttribute('href', AppRoutes.HOME);
+  });
+
+  it('keeps the original Home page with a dashboard shortcut', async () => {
+    renderProjects(AppRoutes.HOME, {
+      roles: [userRole],
+      abilities: projectAbilities(['READ']),
+    });
+
+    expect(
+      await within(await screen.findByRole('main')).findByRole('link', {
+        name: new RegExp(i18n.t('projects.dashboard.title')),
+      }),
+    ).toHaveAttribute('href', AppRoutes.PROJECTS);
+    expect(screen.getByText(i18n.t('home.description'))).toBeInTheDocument();
+  });
+});
+
 describe('Projects dashboard', () => {
   it('shows the indicators and the project list with the hero display name', async () => {
-    renderProjects(AppRoutes.HOME);
+    renderProjects(AppRoutes.PROJECTS);
 
     const row = await findProjectRow();
     expect(
@@ -208,7 +314,7 @@ describe('Projects dashboard', () => {
   });
 
   it('gives a regular user a read-only list without the hero filter', async () => {
-    const { sent } = renderProjects(AppRoutes.HOME, {
+    const { sent } = renderProjects(AppRoutes.PROJECTS, {
       roles: [userRole],
       abilities: projectAbilities(['READ']),
     });
@@ -235,20 +341,39 @@ describe('Projects dashboard', () => {
     expect(sent('GET /projects/heroes')).toHaveLength(0);
   });
 
-  it('loads no project data without READ PROJECT', async () => {
-    const { sent } = renderProjects(AppRoutes.HOME, { abilities: [] });
+  it('shows the hero filter only to a user holding the ADMIN role', async () => {
+    renderProjects(AppRoutes.PROJECTS, { roles: [userRole] });
 
+    await findProjectRow();
     expect(
-      await screen.findByText(
-        i18n.t('home.greeting', { name: 'Ada Lovelace' }),
-      ),
+      screen.getByRole('button', { name: createButtonName() }),
     ).toBeInTheDocument();
-    expect(sent('GET /projects')).toHaveLength(0);
-    expect(sent('GET /projects/statistics')).toHaveLength(0);
+    expect(
+      screen.queryByRole('combobox', {
+        name: i18n.t('projects.fields.responsible'),
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('lets an administrator filter by responsible hero', async () => {
+    const { sent } = renderProjects(AppRoutes.PROJECTS);
+
+    await findProjectRow();
+    const heroFilter = await screen.findByRole('combobox', {
+      name: i18n.t('projects.fields.responsible'),
+    });
+    fireEvent.mouseDown(heroFilter);
+    fireEvent.click(await screen.findByTitle('Grace Hopper'));
+
+    await waitFor(() => {
+      expect(sent('GET /projects').at(-1)?.params).toMatchObject({
+        responsible: grace.uuid,
+      });
+    });
   });
 
   it('filters by status on the server', async () => {
-    const { sent } = renderProjects(`${AppRoutes.HOME}?status=COMPLETED`);
+    const { sent } = renderProjects(`${AppRoutes.PROJECTS}?status=COMPLETED`);
 
     await findProjectRow();
     expect(sent('GET /projects').at(-1)?.params).toEqual({
@@ -259,7 +384,7 @@ describe('Projects dashboard', () => {
   });
 
   it('creates a project assigned to a searched hero', async () => {
-    const { sent } = renderProjects(AppRoutes.HOME, {
+    const { sent } = renderProjects(AppRoutes.PROJECTS, {
       routes: {
         'POST /projects': envelope(projectDetail, 'Projeto criado'),
       },
@@ -303,7 +428,7 @@ describe('Projects dashboard', () => {
   });
 
   it('reassigns the hero by sending only the changed fields', async () => {
-    const { sent } = renderProjects(AppRoutes.HOME, {
+    const { sent } = renderProjects(AppRoutes.PROJECTS, {
       routes: {
         [`PATCH /projects/${project.uuid}`]: envelope(
           projectDetail,
@@ -336,7 +461,7 @@ describe('Projects dashboard', () => {
   });
 
   it('deletes a project after confirmation', async () => {
-    const { sent } = renderProjects(AppRoutes.HOME, {
+    const { sent } = renderProjects(AppRoutes.PROJECTS, {
       routes: {
         [`DELETE /projects/${project.uuid}`]: envelope(
           null,
@@ -479,7 +604,7 @@ describe('Project details', () => {
     fireEvent.click(confirmations[confirmations.length - 1]);
 
     await waitFor(() => {
-      expect(router.state.location.pathname).toBe(AppRoutes.HOME);
+      expect(router.state.location.pathname).toBe(AppRoutes.PROJECTS);
     });
   });
 });

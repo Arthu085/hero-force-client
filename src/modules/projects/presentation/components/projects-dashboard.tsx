@@ -2,7 +2,9 @@ import { PlusOutlined } from '@ant-design/icons';
 import { Button, Flex, Typography } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSession } from '@/modules/auth/infra/auth.queries';
 import { hasAbility } from '@/modules/authorization/domain/ability.schema';
+import { hasAdminRole } from '@/modules/authorization/domain/role.schema';
 import { useAbilities } from '@/modules/authorization/infra/abilities.queries';
 import { useListParams } from '@/shared/list/use-list-params';
 import { useListSorting } from '@/shared/list/use-list-sorting';
@@ -20,6 +22,7 @@ import { ProjectsTable } from './projects-table';
 export const ProjectsDashboard = () => {
   const { t } = useTranslation();
   const { data: abilities = [] } = useAbilities();
+  const { data: user } = useSession();
   const listParams = useListParams(projectFiltersShape);
   const listSorting = useListSorting(projectSortBySchema);
   const { page, limit, filters } = listParams;
@@ -56,7 +59,7 @@ export const ProjectsDashboard = () => {
       </Flex>
       <ProjectsFilters
         listParams={listParams}
-        canFilterByHero={can('UPDATE')}
+        canFilterByHero={user ? hasAdminRole(user.roles) : false}
       />
       <ProjectsTable
         query={projectsQuery}

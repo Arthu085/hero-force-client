@@ -7,6 +7,7 @@ import { AuthGuard } from '@/modules/auth/presentation/guards/auth.guard';
 import { GuestGuard } from '@/modules/auth/presentation/guards/guest.guard';
 import { AuthLayout } from '@/modules/auth/presentation/layouts/auth.layout';
 import { AppRoutes } from './app-routes';
+import { DefaultLanding } from './default-landing';
 
 export const routes: RouteObject[] = [
   {
@@ -20,6 +21,7 @@ export const routes: RouteObject[] = [
               Component: (await import('@/core/layout/main.layout')).MainLayout,
             }),
             children: [
+              { path: AppRoutes.ROOT, Component: DefaultLanding },
               {
                 path: AppRoutes.HOME,
                 lazy: async () => ({
@@ -56,6 +58,14 @@ export const routes: RouteObject[] = [
                   />
                 ),
                 children: [
+                  {
+                    path: AppRoutes.PROJECTS,
+                    lazy: async () => ({
+                      Component: (
+                        await import('@/modules/projects/presentation/pages/projects.page')
+                      ).ProjectsPage,
+                    }),
+                  },
                   {
                     path: AppRoutes.PROJECT_DETAILS,
                     lazy: async () => ({
