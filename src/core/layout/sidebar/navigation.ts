@@ -1,4 +1,4 @@
-import { HomeOutlined } from '@ant-design/icons';
+import { DashboardOutlined } from '@ant-design/icons';
 import type { ComponentType } from 'react';
 import { AppRoutes } from '@/core/router/app-routes';
 import { rolesPage, usersPage } from '@/core/router/page-metadata';
@@ -24,7 +24,11 @@ export const navigationSections: NavigationSection[] = [
   {
     labelKey: 'navigationSections.general',
     items: [
-      { path: AppRoutes.HOME, labelKey: 'navigation.home', icon: HomeOutlined },
+      {
+        path: AppRoutes.HOME,
+        labelKey: 'navigation.home',
+        icon: DashboardOutlined,
+      },
     ],
   },
   {

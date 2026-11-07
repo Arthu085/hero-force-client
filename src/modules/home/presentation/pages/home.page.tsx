@@ -3,8 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { AppRoutes } from '@/core/router/app-routes';
 import { useSession } from '@/modules/auth/infra/auth.queries';
+import { hasAbility } from '@/modules/authorization/domain/ability.schema';
 import { hasAdminRole } from '@/modules/authorization/domain/role.schema';
 import { useAbilities } from '@/modules/authorization/infra/abilities.queries';
+import { ProjectsDashboard } from '@/modules/projects/presentation/components/projects-dashboard';
 import { formatUserDisplayName } from '@/modules/users/domain/user.schema';
 import { useOwnChangeRequests } from '@/modules/users/infra/user-change-requests.queries';
 import { homeShortcuts, visibleHomeShortcuts } from '../home-shortcuts';
@@ -19,6 +21,10 @@ export const HomePage = () => {
   const shortcuts = visibleHomeShortcuts(homeShortcuts, {
     abilities,
     isAdmin: user ? hasAdminRole(user.roles) : false,
+  });
+  const canReadProjects = hasAbility(abilities, {
+    action: 'READ',
+    subject: 'PROJECT',
   });
 
   return (
@@ -36,33 +42,45 @@ export const HomePage = () => {
       {abilitiesPending ? (
         <Skeleton active />
       ) : (
-        <Row gutter={[16, 16]}>
-          {shortcuts.map(({ path, labelKey, descriptionKey, icon: Icon }) => (
-            <Col key={path} xs={24} md={12} xl={8}>
-              <Link to={path} style={{ display: 'block', height: '100%' }}>
-                <Card hoverable style={{ height: '100%' }}>
-                  <Card.Meta
-                    styles={{ title: { whiteSpace: 'normal' } }}
-                    avatar={
-                      <span style={{ fontSize: token.fontSizeHeading3 }}>
-                        <Icon />
-                      </span>
-                    }
-                    title={
-                      <Flex justify="space-between" align="center" gap="small">
-                        {t(labelKey)}
-                        {path === AppRoutes.CHANGE_REQUESTS && (
-                          <Badge count={changeRequests.length} />
-                        )}
-                      </Flex>
-                    }
-                    description={t(descriptionKey)}
-                  />
-                </Card>
-              </Link>
-            </Col>
-          ))}
-        </Row>
+        <>
+          {canReadProjects && <ProjectsDashboard />}
+          {shortcuts.length > 0 && (
+            <Typography.Title level={3} style={{ margin: 0 }}>
+              {t('home.shortcutsTitle')}
+            </Typography.Title>
+          )}
+          <Row gutter={[16, 16]}>
+            {shortcuts.map(({ path, labelKey, descriptionKey, icon: Icon }) => (
+              <Col key={path} xs={24} md={12} xl={8}>
+                <Link to={path} style={{ display: 'block', height: '100%' }}>
+                  <Card hoverable style={{ height: '100%' }}>
+                    <Card.Meta
+                      styles={{ title: { whiteSpace: 'normal' } }}
+                      avatar={
+                        <span style={{ fontSize: token.fontSizeHeading3 }}>
+                          <Icon />
+                        </span>
+                      }
+                      title={
+                        <Flex
+                          justify="space-between"
+                          align="center"
+                          gap="small"
+                        >
+                          {t(labelKey)}
+                          {path === AppRoutes.CHANGE_REQUESTS && (
+                            <Badge count={changeRequests.length} />
+                          )}
+                        </Flex>
+                      }
+                      description={t(descriptionKey)}
+                    />
+                  </Card>
+                </Link>
+              </Col>
+            ))}
+          </Row>
+        </>
       )}
     </Flex>
   );

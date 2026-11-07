@@ -51,6 +51,23 @@ export const routes: RouteObject[] = [
               },
               {
                 element: (
+                  <AbilityGuard
+                    ability={{ action: 'READ', subject: 'PROJECT' }}
+                  />
+                ),
+                children: [
+                  {
+                    path: AppRoutes.PROJECT_DETAILS,
+                    lazy: async () => ({
+                      Component: (
+                        await import('@/modules/projects/presentation/pages/project-details.page')
+                      ).ProjectDetailsPage,
+                    }),
+                  },
+                ],
+              },
+              {
+                element: (
                   <AbilityGuard ability={{ action: 'READ', subject: 'USER' }} />
                 ),
                 children: [
