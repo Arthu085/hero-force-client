@@ -1,7 +1,7 @@
-# Frontend
+# Hero Force Client
 
-React 19 web template: TypeScript, Vite, Ant Design, TanStack Query, Axios, Zod, React Router,
-i18next, Vitest, ESLint, Prettier, npm.
+Hero Force web client in React 19: TypeScript, Vite, Ant Design, TanStack Query, Axios, Zod,
+React Router, i18next, Vitest, ESLint, Prettier, npm.
 
 ## Read before changing code
 

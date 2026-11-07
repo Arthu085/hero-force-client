@@ -1,6 +1,6 @@
-# Frontend
+# Hero Force Client
 
-A React 19 + TypeScript web template built with Vite.
+The Hero Force web client, built with React 19, TypeScript, and Vite.
 The application foundation (providers, routing, HTTP client, localization, and tests) and
 authentication (sign-in, sign-out, password recovery, and route guards) are in place, along with
 users management, a self-service account page, and admin change requests.
@@ -8,10 +8,10 @@ See [`docs/PROJECT.md`](docs/PROJECT.md) for scope, architecture, and source lay
 
 ## Related repository
 
-The related API project is [backend-template](https://github.com/Arthu085/backend-template).
+The related API project is [hero-force-api](https://github.com/Arthu085/hero-force-api).
 The repositories have separate setup, configuration, and validation. The HTTP client follows the
 API contract (cookie sessions, session refresh, session-bound CSRF tokens, `Accept-Language`).
-The default tests stub HTTP, so this template builds and validates without the API running.
+The default tests stub HTTP, so this project builds and validates without the API running.
 The [API integration tests](#api-integration-tests), which run in CI, check real requests and response
 schemas against a disposable backend. Sign in with an API
 user, such as the seeded admin from the API's `SEED_ADMIN_*` settings.
@@ -91,13 +91,12 @@ branch name in both repositories.
 
 ### CI credentials
 
-The job reads the other repository with these settings, which a project created from this template
-configures for its own repositories:
+The job reads the other repository with these settings:
 
-| Setting                               | Purpose                                                                      |
-| ------------------------------------- | ---------------------------------------------------------------------------- |
-| `CROSS_REPO_TOKEN` Actions secret     | Reads a private counterpart repository; set the same token in both           |
-| `BACKEND_REPOSITORY` Actions variable | Counterpart as `owner/name`; defaults to `backend-template` under this owner |
+| Setting                               | Purpose                                                                    |
+| ------------------------------------- | -------------------------------------------------------------------------- |
+| `CROSS_REPO_TOKEN` Actions secret     | Reads a private counterpart repository; set the same token in both         |
+| `BACKEND_REPOSITORY` Actions variable | Counterpart as `owner/name`; defaults to `hero-force-api` under this owner |
 
 Create a fine-grained personal access token or a GitHub App installation token limited to both
 repositories with read-only Contents access (read-only Metadata is implied), then store it in each
@@ -119,12 +118,12 @@ run the suite from the frontend:
 
 ```sh
 npm ci
-npm --prefix ../backend-template ci
-BACKEND_TEMPLATE_PATH=../backend-template npm run test:integration
+npm --prefix ../hero-force-api ci
+BACKEND_PATH=../hero-force-api npm run test:integration
 ```
 
-`BACKEND_TEMPLATE_PATH` is a test-only path to the backend checkout; it defaults to
-`../backend-template`. That checkout must include `test/frontend/server.ts`. The suite starts an
+`BACKEND_PATH` is a test-only path to the backend checkout; it defaults to
+`../hero-force-api`. That checkout must include `test/frontend/server.ts`. The suite starts an
 ephemeral PostgreSQL Testcontainer, applies the backend's migrations and seeds, and listens on an
 available localhost port. It closes the API and container after the run, using no developer database
 or running API. Both repositories keep their existing validation gates. The access-token lifetime
