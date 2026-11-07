@@ -225,7 +225,8 @@ keeps its own entries, ordering, and overrides. An entry with an `ability` is sh
 user has it, and while abilities load, only entries without one are shown; a section with no visible
 entry is hidden. In the expanded menu each section is a collapsible submenu: clicking its title
 shows or hides its entries, several sections can be open at once, and the section holding the
-current page opens whenever that page changes. The collapsed rail shows every entry's icon and
+current page opens whenever that page changes. A nested page selects the entry whose path contains
+it, so `/projects/:uuid` keeps Dashboard selected. The collapsed rail shows every entry's icon and
 separates sections with dividers. In the collapsed rail the bottom buttons show only their icons, with tooltips. The menu scrolls
 vertically between the fixed title and bottom buttons when
 its entries do not fit.
@@ -319,14 +320,17 @@ same screens serve both and the frontend never filters by role.
   filter, server-side sorting on every column, and URL-synced state. Each row shows the status tag,
   a progress bar, and the responsible hero as `Real Name (Character Name)` with their avatar. The
   actions column always shows a View details link to the details page, also reachable through the
-  project name, next to edit and delete when the user may use them.
+  project name, next to edit and delete when the user may use them. An empty list says whether
+  the filters exclude every project, no project exists yet (`ADMIN`), or none is assigned to the
+  user.
 - **Responsible hero:** `HeroSelect` searches `GET /projects/heroes` on the server and always keeps
   the current hero as an option, so the user directory (`READ` on `USER`) is not needed. The API
   lists heroes only to callers holding the `ADMIN` role (with `READ` on `PROJECT`), so the hero
   filter is shown only to a user holding `ADMIN`, and regular users never call that route. The
   selector appears in the project form, which needs `CREATE` or `UPDATE` on `PROJECT`.
 - **Managing:** `CREATE` on `PROJECT` shows New project; `UPDATE` shows edit (the form loads the
-  detail first and sends only changed fields, which is how a hero is reassigned) and Edit goals;
+  detail first and sends only changed fields, which is how a hero is reassigned) and Edit goals,
+  placed on the details page's Goals card;
   `DELETE` shows delete with confirmation. Without those abilities the screens are read-only.
 - **Details:** `/projects/:uuid` (guarded by `READ` on `PROJECT`) shows the description, the hero,
   the dates, the overall progress, and each goal with its progress and description. A project
@@ -334,7 +338,8 @@ same screens serve both and the frontend never filters by role.
   returns to the projects dashboard.
 - **Goals:** the goals modal edits all six goals at once, each with a slider and a number input
   (integers 0–100) and an optional description; a blank description is sent as `null`. Overall
-  progress and status are derived by the API and never edited.
+  progress and status are derived by the API and never edited. Every project mutation invalidates
+  the project queries, so the details, the indicators, and the list refresh at once.
 - **Labels:** statuses and goals are shown through the `projects.status` and `projects.goalTypes`
   translations keyed by their enum values, so every screen follows the selected language at once
   and never shows a raw enum value. The API's `statusLabel` and `goalLabel` stay in the schemas

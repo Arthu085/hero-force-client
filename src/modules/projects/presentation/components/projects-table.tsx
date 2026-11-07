@@ -2,6 +2,7 @@ import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { type UseQueryResult, useQueryClient } from '@tanstack/react-query';
 import {
   Button,
+  Empty,
   Popconfirm,
   Space,
   type TableColumnsType,
@@ -35,6 +36,7 @@ interface ProjectsTableProps {
   listSorting: ListSorting<z.infer<typeof projectSortBySchema>>;
   canEdit: boolean;
   canDelete: boolean;
+  emptyText: string;
   onEdit: (project: ProjectDetail) => void;
 }
 
@@ -44,6 +46,7 @@ export const ProjectsTable = ({
   listSorting,
   canEdit,
   canDelete,
+  emptyText,
   onEdit,
 }: ProjectsTableProps) => {
   const { t, i18n } = useTranslation();
@@ -166,6 +169,11 @@ export const ProjectsTable = ({
       rowKey="uuid"
       columns={columns}
       scroll={{ x: 'max-content' }}
+      locale={{
+        emptyText: (
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={emptyText} />
+        ),
+      }}
       onChange={(_pagination, _filters, sorter, extra) => {
         if (extra.action === 'sort' && !Array.isArray(sorter)) {
           listSorting.setSorting(sorter.columnKey, sorter.order);

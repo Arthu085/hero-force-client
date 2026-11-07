@@ -77,17 +77,9 @@ const ProjectDetailsContent = ({ project }: { project: ProjectDetail }) => {
         </Flex>
         <Flex gap="small" wrap>
           {can('UPDATE') && (
-            <>
-              <Button icon={<EditOutlined />} onClick={() => setEditing(true)}>
-                {t('projects.actions.editProject')}
-              </Button>
-              <Button
-                icon={<AimOutlined />}
-                onClick={() => setEditingGoals(true)}
-              >
-                {t('projects.actions.editGoals')}
-              </Button>
-            </>
+            <Button icon={<EditOutlined />} onClick={() => setEditing(true)}>
+              {t('projects.actions.editProject')}
+            </Button>
           )}
           {can('DELETE') && (
             <Popconfirm
@@ -172,7 +164,20 @@ const ProjectDetailsContent = ({ project }: { project: ProjectDetail }) => {
           </Card>
         </Col>
       </Row>
-      <Card title={t('projects.goals.title')}>
+      <Card
+        title={t('projects.goals.title')}
+        extra={
+          can('UPDATE') && (
+            <Button
+              type="primary"
+              icon={<AimOutlined />}
+              onClick={() => setEditingGoals(true)}
+            >
+              {t('projects.actions.editGoals')}
+            </Button>
+          )
+        }
+      >
         <Flex vertical gap="large">
           {project.goals.map(({ goal, description, progress }) => (
             <Flex key={goal} vertical gap={4}>

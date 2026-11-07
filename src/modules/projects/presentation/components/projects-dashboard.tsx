@@ -40,6 +40,12 @@ export const ProjectsDashboard = () => {
   const can = (action: 'CREATE' | 'UPDATE' | 'DELETE') =>
     hasAbility(abilities, { action, subject: 'PROJECT' });
 
+  const isAdmin = user ? hasAdminRole(user.roles) : false;
+  const hasFilters = Object.values(filters).some(Boolean);
+  const emptyText = hasFilters
+    ? t('projects.empty.filtered')
+    : t(isAdmin ? 'projects.empty.all' : 'projects.empty.assigned');
+
   return (
     <Flex vertical gap="middle">
       <ProjectStatistics />
@@ -57,16 +63,14 @@ export const ProjectsDashboard = () => {
           </Button>
         )}
       </Flex>
-      <ProjectsFilters
-        listParams={listParams}
-        canFilterByHero={user ? hasAdminRole(user.roles) : false}
-      />
+      <ProjectsFilters listParams={listParams} canFilterByHero={isAdmin} />
       <ProjectsTable
         query={projectsQuery}
         listParams={listParams}
         listSorting={listSorting}
         canEdit={can('UPDATE')}
         canDelete={can('DELETE')}
+        emptyText={emptyText}
         onEdit={setEditingProject}
       />
       <ProjectFormModal open={creating} onClose={() => setCreating(false)} />

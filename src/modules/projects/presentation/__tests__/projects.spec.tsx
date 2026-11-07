@@ -422,6 +422,28 @@ describe('Projects dashboard', () => {
     });
   });
 
+  it('tells a regular user when no project is assigned to them', async () => {
+    renderProjects(AppRoutes.PROJECTS, {
+      roles: [userRole],
+      abilities: projectAbilities(['READ']),
+      routes: { 'GET /projects': paginated([]) },
+    });
+
+    expect(
+      await screen.findByText(i18n.t('projects.empty.assigned')),
+    ).toBeInTheDocument();
+  });
+
+  it('explains an empty list caused by the filters', async () => {
+    renderProjects(`${AppRoutes.PROJECTS}?status=COMPLETED`, {
+      routes: { 'GET /projects': paginated([]) },
+    });
+
+    expect(
+      await screen.findByText(i18n.t('projects.empty.filtered')),
+    ).toBeInTheDocument();
+  });
+
   it('filters by status on the server', async () => {
     const { sent } = renderProjects(`${AppRoutes.PROJECTS}?status=COMPLETED`);
 
@@ -628,6 +650,59 @@ describe('Project details', () => {
     expect(
       await screen.findByText('Projeto não encontrado'),
     ).toBeInTheDocument();
+  });
+
+  it('keeps the dashboard entry selected in the sidebar', async () => {
+    renderProjects(projectDetailsPath(project.uuid), {
+      roles: [userRole],
+      abilities: projectAbilities(['READ']),
+    });
+
+    await screen.findByRole('heading', { name: project.name });
+    const navigation = screen.getByRole('navigation', {
+      name: i18n.t('layout.navigation'),
+    });
+    const entry = within(navigation)
+      .getByRole('link', { name: i18n.t('navigation.projectsDashboard') })
+      .closest('li');
+    expect(entry).toHaveClass('ant-menu-item-selected');
+  });
+
+  it('offers goal editing next to the goals and refreshes the project', async () => {
+    const { sent } = renderProjects(projectDetailsPath(project.uuid), {
+      routes: {
+        [`PATCH /projects/${project.uuid}/goals`]: envelope(
+          projectDetail,
+          'Metas atualizadas',
+        ),
+      },
+    });
+
+    const goalsCard = (
+      await screen.findByText(i18n.t('projects.goals.title'))
+    ).closest<HTMLElement>('.ant-card');
+    if (!goalsCard) {
+      throw new Error('Goals card not found');
+    }
+    fireEvent.click(
+      within(goalsCard).getByRole('button', {
+        name: new RegExp(i18n.t('projects.actions.editGoals')),
+      }),
+    );
+    const dialog = await findDialog(
+      i18n.t('projects.goals.editTitle', { name: project.name }),
+    );
+    const detailRequests = sent(`GET /projects/${project.uuid}`).length;
+    fireEvent.click(
+      within(dialog).getByRole('button', { name: i18n.t('common.save') }),
+    );
+
+    expect(await screen.findByText('Metas atualizadas')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(sent(`GET /projects/${project.uuid}`).length).toBeGreaterThan(
+        detailRequests,
+      );
+    });
   });
 
   it('lets an administrator update the goals', async () => {
