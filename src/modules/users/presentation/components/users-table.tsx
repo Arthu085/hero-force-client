@@ -1,0 +1,257 @@
+import {
+  CheckCircleOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  EyeOutlined,
+} from '@ant-design/icons';
+import { type UseQueryResult, useQueryClient } from '@tanstack/react-query';
+import {
+  Button,
+  Popconfirm,
+  Space,
+  Switch,
+  type TableColumnsType,
+  Typography,
+} from 'antd';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { PaginatedResponse } from '@/core/http/api-envelope';
+import { useSession } from '@/modules/auth/infra/auth.queries';
+import {
+  type Ability,
+  hasAbility,
+} from '@/modules/authorization/domain/ability.schema';
+import { useAbilities } from '@/modules/authorization/infra/abilities.queries';
+import { RoleTags } from '@/modules/authorization/presentation/components/role-tags';
+import { useFeedbackModal } from '@/shared/feedback/use-feedback-modal';
+import { PaginatedTable } from '@/shared/list/paginated-table';
+import type { ListParams } from '@/shared/list/use-list-params';
+import type { ListSorting } from '@/shared/list/use-list-sorting';
+import type { z } from 'zod';
+import type { userFiltersShape } from '../../domain/user-form.schemas';
+import type {
+  UserDetail,
+  UserListItem,
+  userSortBySchema,
+} from '../../domain/user.schema';
+import {
+  useDeleteUser,
+  useConfirmUserEmail,
+  userQuery,
+  useUpdateUserStatus,
+} from '../../infra/users.queries';
+
+interface LoadingUser {
+  uuid: string;
+  purpose: 'details' | 'edit' | 'confirmEmail';
+}
+
+interface UsersTableProps {
+  query: UseQueryResult<PaginatedResponse<UserListItem>>;
+  listParams: ListParams<typeof userFiltersShape>;
+  listSorting: ListSorting<z.infer<typeof userSortBySchema>>;
+  onView: (user: UserDetail) => void;
+  onEdit: (user: UserDetail) => void;
+}
+
+export const UsersTable = ({
+  query,
+  listParams,
+  listSorting,
+  onView,
+  onEdit,
+}: UsersTableProps) => {
+  const { t } = useTranslation();
+  const { showError, confirmWarning } = useFeedbackModal();
+  const queryClient = useQueryClient();
+  const { data: sessionUser } = useSession();
+  const { data: abilities = [] } = useAbilities();
+  const { page, limit, setPagination } = listParams;
+  const statusMutation = useUpdateUserStatus();
+  const deleteMutation = useDeleteUser();
+  const confirmEmailMutation = useConfirmUserEmail();
+  const [loadingUser, setLoadingUser] = useState<LoadingUser>();
+
+  const canManageUsers = (action: Ability['action']) =>
+    hasAbility(abilities, { action, subject: 'USER' });
+
+  const openWithCurrentUser = (
+    uuid: string,
+    purpose: LoadingUser['purpose'],
+    open: (user: UserDetail) => void,
+  ) => {
+    setLoadingUser({ uuid, purpose });
+    queryClient
+      .fetchQuery(userQuery(uuid))
+      .then(open, showError)
+      .finally(() => setLoadingUser(undefined));
+  };
+
+  const isLoadingUser = (uuid: string, purpose: LoadingUser['purpose']) =>
+    loadingUser?.uuid === uuid && loadingUser.purpose === purpose;
+
+  const confirmEmail = (user: UserDetail) => {
+    confirmWarning({
+      title: t('users.confirmEmail.title'),
+      content: t('users.confirmEmail.description', {
+        name: user.name,
+        email: user.email,
+      }),
+      okText: t('users.confirmEmail.submit'),
+      onOk: () => {
+        confirmEmailMutation.mutate(
+          { uuid: user.uuid, email: user.email },
+          { onError: showError },
+        );
+      },
+    });
+  };
+
+  const removeUser = (uuid: string) => {
+    const isLastRowOfPage = query.data?.data.length === 1 && page > 1;
+
+    deleteMutation.mutate(uuid, {
+      onSuccess: () => {
+        if (isLastRowOfPage) {
+          setPagination(page - 1, limit);
+        }
+      },
+      onError: showError,
+    });
+  };
+
+  const columns: TableColumnsType<UserListItem> = [
+    {
+      title: t('users.fields.name'),
+      dataIndex: 'name',
+      ...listSorting.columnSorting('name'),
+      render: (_, { uuid, name }) => (
+        <Space size="small">
+          {name}
+          {uuid === sessionUser?.uuid && (
+            <Typography.Text type="secondary">
+              {t('users.currentUser')}
+            </Typography.Text>
+          )}
+        </Space>
+      ),
+    },
+    {
+      title: t('users.fields.roles'),
+      dataIndex: 'roles',
+      render: (_, { roles }) => <RoleTags roles={roles} />,
+    },
+    {
+      title: t('users.fields.status'),
+      dataIndex: 'status',
+      ...listSorting.columnSorting('status'),
+      render: (_, { uuid, name, status, statusLabel }) => (
+        <Space>
+          {canManageUsers('UPDATE') && (
+            <Switch
+              size="small"
+              aria-label={t('users.actions.toggleStatus', { name })}
+              checked={status === 'ACTIVE'}
+              loading={
+                statusMutation.isPending &&
+                statusMutation.variables.uuid === uuid
+              }
+              onChange={(checked) => {
+                statusMutation.mutate(
+                  { uuid, status: checked ? 'ACTIVE' : 'INACTIVE' },
+                  { onError: showError },
+                );
+              }}
+            />
+          )}
+          {statusLabel}
+        </Space>
+      ),
+    },
+    {
+      title: t('users.fields.actions'),
+      key: 'actions',
+      render: (_, { uuid, name, status, emailConfirmedAt, roles }) => (
+        <Space>
+          <Button
+            size="small"
+            icon={<EyeOutlined />}
+            aria-label={t('users.actions.details', { name })}
+            disabled={status === 'INACTIVE'}
+            loading={isLoadingUser(uuid, 'details')}
+            onClick={() => openWithCurrentUser(uuid, 'details', onView)}
+          />
+          {canManageUsers('UPDATE') && (
+            <Button
+              size="small"
+              icon={<EditOutlined />}
+              aria-label={t('users.actions.edit', { name })}
+              disabled={status === 'INACTIVE'}
+              loading={isLoadingUser(uuid, 'edit')}
+              onClick={() => openWithCurrentUser(uuid, 'edit', onEdit)}
+            />
+          )}
+          {canManageUsers('UPDATE') &&
+            canManageUsers('READ') &&
+            status === 'ACTIVE' &&
+            emailConfirmedAt === null &&
+            (!roles.some((role) => role.role === 'ADMIN') ||
+              sessionUser?.roles.some(
+                (role) => role.role === 'ADMIN' && role.status === 'ACTIVE',
+              )) && (
+              <Button
+                size="small"
+                icon={<CheckCircleOutlined />}
+                aria-label={t('users.actions.confirmEmail', { name })}
+                disabled={
+                  confirmEmailMutation.isPending || loadingUser !== undefined
+                }
+                loading={
+                  isLoadingUser(uuid, 'confirmEmail') ||
+                  (confirmEmailMutation.isPending &&
+                    confirmEmailMutation.variables.uuid === uuid)
+                }
+                onClick={() =>
+                  openWithCurrentUser(uuid, 'confirmEmail', confirmEmail)
+                }
+              />
+            )}
+          {canManageUsers('DELETE') && (
+            <Popconfirm
+              title={t('users.delete.title')}
+              description={t('users.delete.description', { name })}
+              okText={t('common.delete')}
+              cancelText={t('common.cancel')}
+              okButtonProps={{ danger: true }}
+              onConfirm={() => removeUser(uuid)}
+            >
+              <Button
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                aria-label={t('users.actions.delete', { name })}
+                loading={
+                  deleteMutation.isPending && deleteMutation.variables === uuid
+                }
+              />
+            </Popconfirm>
+          )}
+        </Space>
+      ),
+    },
+  ];
+
+  return (
+    <PaginatedTable
+      query={query}
+      listParams={listParams}
+      rowKey="uuid"
+      columns={columns}
+      onChange={(_pagination, _filters, sorter, extra) => {
+        if (extra.action === 'sort' && !Array.isArray(sorter)) {
+          listSorting.setSorting(sorter.columnKey, sorter.order);
+        }
+      }}
+    />
+  );
+};

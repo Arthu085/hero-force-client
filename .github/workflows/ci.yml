@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: Format, lint, typecheck, test and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  api-integration:
+    name: API integration tests
+    runs-on: ubuntu-latest
+    env:
+      BACKEND_REPOSITORY: ${{ vars.BACKEND_REPOSITORY || format('{0}/backend-template', github.repository_owner) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: frontend
+          persist-credentials: false
+
+      # A coordinated contract change uses one branch name in both repositories;
+      # otherwise the suite runs against the other repository's main.
+      # The token stays in this step and the next checkout, so dependency install and test code never receive it.
+      - name: Resolve backend ref
+        id: backend-ref
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+          GH_TOKEN: ${{ secrets.CROSS_REPO_TOKEN || github.token }}
+          GIT_TERMINAL_PROMPT: '0'
+        run: |
+          status=0
+          git -c credential.helper= -c 'credential.helper=!gh auth git-credential' \
+            ls-remote --exit-code --heads "https://github.com/$BACKEND_REPOSITORY" "refs/heads/$BRANCH" > /dev/null || status=$?
+
+          case "$status" in
+            0) ref="$BRANCH" ;;
+            2) ref=main ;;
+            *)
+              echo "::error::Cannot read $BACKEND_REPOSITORY. A private repository requires the CROSS_REPO_TOKEN Actions secret with Contents read access; see \"API integration tests\" in README.md."
+              exit 1
+              ;;
+          esac
+
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.BACKEND_REPOSITORY }}
+          ref: ${{ steps.backend-ref.outputs.ref }}
+          path: backend
+          token: ${{ secrets.CROSS_REPO_TOKEN || github.token }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: backend
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      # Testcontainers provisions the backend's ephemeral Postgres; the runner's Docker
+      # daemon is the only requirement.
+      - name: Run API integration tests
+        run: npm run test:integration
+        working-directory: frontend
+        env:
+          BACKEND_TEMPLATE_PATH: ../backend

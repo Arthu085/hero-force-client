@@ -1,0 +1,44 @@
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+}
+
+.ant-input-password .ant-input-password-icon {
+  min-inline-size: 24px;
+  min-block-size: 24px;
+  align-items: center;
+  justify-content: center;
+  margin-block: -1px;
+}
+
+.sidebar-navigation {
+  --sidebar-scrollbar-thumb: var(--ant-color-border);
+  --sidebar-scrollbar-thumb-hover: var(--ant-color-text-quaternary);
+}
+
+.sidebar-navigation::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-navigation::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-navigation::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: var(--sidebar-scrollbar-thumb);
+}
+
+.sidebar-navigation::-webkit-scrollbar-thumb:hover {
+  background: var(--sidebar-scrollbar-thumb-hover);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .sidebar-navigation {
+    scrollbar-width: thin;
+    scrollbar-color: var(--sidebar-scrollbar-thumb) transparent;
+  }
+}
