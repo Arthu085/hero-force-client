@@ -24,6 +24,7 @@ import type {
   projectSortBySchema,
 } from '../../domain/project.schema';
 import { projectQuery, useDeleteProject } from '../../infra/projects.queries';
+import { ProjectDetailsButton } from './project-details-button';
 import { ProjectHeroLabel } from './project-hero-label';
 import { ProjectProgress } from './project-progress';
 import { ProjectStatusTag } from './project-status-tag';
@@ -120,48 +121,44 @@ export const ProjectsTable = ({
         </Typography.Text>
       ),
     },
-    ...(canEdit || canDelete
-      ? [
-          {
-            title: t('projects.fields.actions'),
-            key: 'actions',
-            render: (_: unknown, { uuid, name }: ProjectListItem) => (
-              <Space>
-                {canEdit && (
-                  <Button
-                    size="small"
-                    icon={<EditOutlined />}
-                    aria-label={t('projects.actions.edit', { name })}
-                    loading={loadingUuid === uuid}
-                    onClick={() => openEdit(uuid)}
-                  />
-                )}
-                {canDelete && (
-                  <Popconfirm
-                    title={t('projects.delete.title')}
-                    description={t('projects.delete.description', { name })}
-                    okText={t('common.delete')}
-                    cancelText={t('common.cancel')}
-                    okButtonProps={{ danger: true }}
-                    onConfirm={() => removeProject(uuid)}
-                  >
-                    <Button
-                      size="small"
-                      danger
-                      icon={<DeleteOutlined />}
-                      aria-label={t('projects.actions.delete', { name })}
-                      loading={
-                        deleteMutation.isPending &&
-                        deleteMutation.variables === uuid
-                      }
-                    />
-                  </Popconfirm>
-                )}
-              </Space>
-            ),
-          },
-        ]
-      : []),
+    {
+      title: t('projects.fields.actions'),
+      key: 'actions',
+      render: (_, { uuid, name }) => (
+        <Space>
+          <ProjectDetailsButton uuid={uuid} name={name} />
+          {canEdit && (
+            <Button
+              size="small"
+              icon={<EditOutlined />}
+              aria-label={t('projects.actions.edit', { name })}
+              loading={loadingUuid === uuid}
+              onClick={() => openEdit(uuid)}
+            />
+          )}
+          {canDelete && (
+            <Popconfirm
+              title={t('projects.delete.title')}
+              description={t('projects.delete.description', { name })}
+              okText={t('common.delete')}
+              cancelText={t('common.cancel')}
+              okButtonProps={{ danger: true }}
+              onConfirm={() => removeProject(uuid)}
+            >
+              <Button
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                aria-label={t('projects.actions.delete', { name })}
+                loading={
+                  deleteMutation.isPending && deleteMutation.variables === uuid
+                }
+              />
+            </Popconfirm>
+          )}
+        </Space>
+      ),
+    },
   ];
 
   return (

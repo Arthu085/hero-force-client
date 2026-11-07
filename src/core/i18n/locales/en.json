@@ -150,6 +150,8 @@
     },
     "progressOf": "Progress of {{name}}",
     "actions": {
+      "viewDetails": "View details",
+      "details": "View details of {{name}}",
       "edit": "Edit {{name}}",
       "delete": "Delete {{name}}",
       "editProject": "Edit",

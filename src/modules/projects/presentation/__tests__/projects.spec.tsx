@@ -313,6 +313,52 @@ describe('Projects dashboard', () => {
     }
   });
 
+  it.each([
+    {
+      label: 'an administrator',
+      roles: [adminRole],
+      abilities: adminAbilities,
+    },
+    {
+      label: 'a regular user',
+      roles: [userRole],
+      abilities: projectAbilities(['READ']),
+    },
+  ])(
+    'lets $label open the project details from the actions column',
+    async ({ roles, abilities }) => {
+      const { router } = renderProjects(AppRoutes.PROJECTS, {
+        roles,
+        abilities,
+      });
+
+      const viewDetails = within(await findProjectRow()).getByRole('link', {
+        name: i18n.t('projects.actions.details', { name: project.name }),
+      });
+      expect(viewDetails).toHaveAttribute(
+        'href',
+        projectDetailsPath(project.uuid),
+      );
+
+      fireEvent.mouseEnter(viewDetails);
+      expect(
+        await screen.findByRole('tooltip', {
+          name: i18n.t('projects.actions.viewDetails'),
+        }),
+      ).toBeInTheDocument();
+
+      fireEvent.click(viewDetails);
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(
+          projectDetailsPath(project.uuid),
+        );
+      });
+      expect(
+        await screen.findByRole('heading', { name: project.name }),
+      ).toBeInTheDocument();
+    },
+  );
+
   it('gives a regular user a read-only list without the hero filter', async () => {
     const { sent } = renderProjects(AppRoutes.PROJECTS, {
       roles: [userRole],

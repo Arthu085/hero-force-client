@@ -317,8 +317,9 @@ same screens serve both and the frontend never filters by role.
 - **Dashboard:** `/projects`, behind `AbilityGuard` with `READ` on `PROJECT`, shows five indicators from `GET /projects/statistics` (total, pending, in progress,
   completed, and average progress), then the paginated project list with name search, a status
   filter, server-side sorting on every column, and URL-synced state. Each row shows the status tag,
-  a progress bar, and the responsible hero as `Real Name (Character Name)` with their avatar; the
-  name links to the details page.
+  a progress bar, and the responsible hero as `Real Name (Character Name)` with their avatar. The
+  actions column always shows a View details link to the details page, also reachable through the
+  project name, next to edit and delete when the user may use them.
 - **Responsible hero:** `HeroSelect` searches `GET /projects/heroes` on the server and always keeps
   the current hero as an option, so the user directory (`READ` on `USER`) is not needed. The API
   lists heroes only to callers holding the `ADMIN` role (with `READ` on `PROJECT`), so the hero

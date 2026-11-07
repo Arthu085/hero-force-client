@@ -150,6 +150,8 @@
     },
     "progressOf": "Progresso de {{name}}",
     "actions": {
+      "viewDetails": "Ver detalhes",
+      "details": "Ver detalhes de {{name}}",
       "edit": "Editar {{name}}",
       "delete": "Excluir {{name}}",
       "editProject": "Editar",
