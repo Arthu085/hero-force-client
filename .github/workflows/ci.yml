@@ -42,6 +42,10 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_API_URL: https://hero.example.com
+          VITE_APP_NAME: Hero Force
+          VITE_APP_MARK: HF
 
   api-integration:
     name: API integration tests

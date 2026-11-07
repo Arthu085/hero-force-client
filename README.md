@@ -76,8 +76,9 @@ language, and handles CSRF tokens and session refresh automatically.
 ## Environment
 
 All frontend variables are listed in [`.env.example`](.env.example) and validated with Zod at
-startup in [`src/core/config/env.config.ts`](src/core/config/env.config.ts). Invalid values stop the
-application. `VITE_*` values are embedded in the browser bundle and must never contain secrets.
+build time and startup through the shared
+[`environment schema`](src/core/config/env.schema.ts). Invalid values stop the build or application.
+`VITE_*` values are embedded in the browser bundle and must never contain secrets.
 
 | Variable        | Required | Example                 | Purpose                                                            |
 | --------------- | -------- | ----------------------- | ------------------------------------------------------------------ |
@@ -112,6 +113,12 @@ PWA installation works on `localhost` or HTTPS. Development also registers a ser
 trying installation and updates; offline shell loading requires a build. See the
 [PWA documentation](docs/PROJECT.md#progressive-web-app) for caching, icons, and development worker
 behavior.
+
+## Production deployment
+
+See [`docs/deployment.md`](docs/deployment.md) for a same-origin HTTPS setup, production build
+variables, SPA fallback and cache configuration, PWA checks, and release procedures. Serve the
+built `dist/` with a static web server; `npm run preview` is a local validation tool.
 
 ## Testing and validation
 
