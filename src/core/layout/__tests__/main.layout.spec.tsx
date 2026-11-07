@@ -30,6 +30,7 @@ const user: UserDetail = {
   updaterName: null,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
+  character: null,
 };
 
 const envelope = (data: unknown) => ({ status: 200, data: { data, meta: {} } });
@@ -107,6 +108,37 @@ describe('MainLayout', () => {
     await waitFor(() => {
       expect(requests.map(requestKey)).toContain('GET /users/me/abilities');
     });
+  });
+
+  it('hides the administration section without abilities', async () => {
+    stubHttpRoutes(httpClient, {
+      ...signedInRoutes,
+      'GET /users/me/abilities': envelope([]),
+    });
+
+    renderRoute(AppRoutes.HOME);
+
+    await within(await screen.findByRole('main')).findByRole('link', {
+      name: (name) => name.includes(i18n.t('account.title')),
+    });
+    const navigation = screen.getByRole('navigation', {
+      name: i18n.t('layout.navigation'),
+    });
+    expect(
+      within(navigation).getByRole('link', {
+        name: i18n.t('navigation.home'),
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(navigation).queryByRole('menuitem', {
+        name: i18n.t('navigationSections.administration'),
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(navigation).queryByRole('link', {
+        name: i18n.t('navigation.users'),
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it('opens the section of the current page', async () => {

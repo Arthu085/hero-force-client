@@ -15,6 +15,7 @@ import {
   type StubResponse,
   stubHttpRoutes,
 } from '@/test/http-stub';
+import { characterCatalog, spiderMan } from '@/test/characters';
 import { findDialog } from '@/test/find-dialog';
 import { renderRoute } from '@/test/render-route';
 
@@ -46,6 +47,7 @@ const sessionUser: UserDetail = {
   updaterName: null,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
+  character: null,
 };
 
 const grace: UserListItem = {
@@ -55,6 +57,7 @@ const grace: UserListItem = {
   status: 'ACTIVE',
   statusLabel: 'Ativo',
   roles: [userRole],
+  character: null,
 };
 
 const graceDetail: UserDetail = {
@@ -103,6 +106,7 @@ const renderUsers = (
     'GET /users/me/change-requests': envelope([]),
     'GET /roles': envelope([adminRole, userRole]),
     'GET /users': usersPage([grace]),
+    'GET /characters': envelope(characterCatalog),
     ...routes,
   });
   const rendered = renderRoute(path);
@@ -376,6 +380,48 @@ describe('UsersPage', () => {
     );
   });
 
+  it('shows the character name and avatar next to the real name', async () => {
+    const graceWithCharacter = { ...grace, character: spiderMan };
+    renderUsers(AppRoutes.USERS, {
+      'GET /users': usersPage([graceWithCharacter]),
+      [`GET /users/${grace.uuid}`]: envelope({
+        ...graceDetail,
+        character: spiderMan,
+      }),
+    });
+
+    const row = await graceRow();
+    expect(
+      within(row).getByText(`${grace.name} (${spiderMan.name})`),
+    ).toBeInTheDocument();
+    expect(row.querySelector('img')).toHaveAttribute(
+      'src',
+      spiderMan.avatarPath,
+    );
+
+    fireEvent.click(
+      within(row).getByRole('button', {
+        name: i18n.t('users.actions.details', { name: grace.name }),
+      }),
+    );
+
+    const dialog = await screen.findByRole('dialog');
+    expect(
+      await within(dialog).findByText(
+        `${spiderMan.name} · ${spiderMan.universeLabel}`,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('falls back to the initials without a character', async () => {
+    renderUsers(AppRoutes.USERS);
+
+    const row = await graceRow();
+    expect(within(row).getByText(grace.name)).toBeInTheDocument();
+    expect(within(row).getByText('GH')).toBeInTheDocument();
+    expect(row.querySelector('img')).toBeNull();
+  });
+
   it('lists active users by default and keeps the status filter required', async () => {
     const { router, sent } = renderUsers(AppRoutes.USERS);
 
@@ -462,7 +508,15 @@ describe('UsersPage', () => {
       sessionUser;
     renderUsers(AppRoutes.USERS, {
       'GET /users': usersPage([
-        { uuid, name, status, statusLabel, roles, emailConfirmedAt },
+        {
+          uuid,
+          name,
+          status,
+          statusLabel,
+          roles,
+          emailConfirmedAt,
+          character: null,
+        },
         grace,
       ]),
     });
@@ -538,6 +592,7 @@ describe('UsersPage', () => {
       email: 'grace@example.com',
       password: 'Secret-password1',
       roleUuids: [userRole.uuid],
+      characterCode: null,
     });
     await waitFor(() => {
       expect(sent('GET /users')).toHaveLength(2);
@@ -582,6 +637,43 @@ describe('UsersPage', () => {
     expect(requestBody(sent(`PATCH /users/${grace.uuid}`)[0])).toEqual({
       name: 'Grace B. Hopper',
       email: graceDetail.email,
+    });
+  });
+
+  it('changes the character of a user', async () => {
+    const { sent } = renderUsers(AppRoutes.USERS, {
+      [`GET /users/${grace.uuid}`]: envelope(graceDetail),
+      [`PATCH /users/${grace.uuid}`]: envelope(
+        { ...graceDetail, character: spiderMan },
+        'Atualizado com sucesso',
+      ),
+    });
+
+    fireEvent.click(
+      within(await graceRow()).getByRole('button', {
+        name: i18n.t('users.actions.edit', { name: grace.name }),
+      }),
+    );
+    const dialog = await screen.findByRole('dialog');
+    const character = within(dialog).getByLabelText(
+      i18n.t('users.fields.character'),
+    );
+    await waitFor(() => {
+      expect(character).toBeEnabled();
+    });
+    fireEvent.mouseDown(character);
+    fireEvent.click(await screen.findByTitle(spiderMan.name));
+    fireEvent.click(
+      within(dialog).getByRole('button', { name: i18n.t('common.save') }),
+    );
+
+    expect(
+      await screen.findByText('Atualizado com sucesso'),
+    ).toBeInTheDocument();
+    expect(requestBody(sent(`PATCH /users/${grace.uuid}`)[0])).toEqual({
+      name: grace.name,
+      email: graceDetail.email,
+      characterCode: spiderMan.code,
     });
   });
 
@@ -636,11 +728,13 @@ describe('UsersPage', () => {
                 name: turing.name,
                 email: turing.email,
                 roles: [adminRole],
+                character: null,
               },
               requested: {
                 name: 'Alan M. Turing',
                 email: turing.email,
                 roles: [adminRole],
+                character: null,
               },
               expiresAt: '2026-01-03T12:00:00.000Z',
               createdAt: '2026-01-02T12:00:00.000Z',

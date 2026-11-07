@@ -12,6 +12,7 @@ import {
   type StubResponse,
   stubHttpRoutes,
 } from '@/test/http-stub';
+import { batman, characterCatalog, spiderMan } from '@/test/characters';
 import { findDialog } from '@/test/find-dialog';
 import { renderRoute } from '@/test/render-route';
 
@@ -27,6 +28,7 @@ const user: UserDetail = {
   updaterName: null,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
+  character: null,
 };
 
 const envelope = (data: unknown): StubResponse => ({
@@ -39,10 +41,12 @@ const signedInRoutes = {
   'GET /users/me/abilities': envelope([]),
   'GET /users/me/change-requests': envelope([]),
   'GET /auth/csrf': csrfResponse('token-1'),
+  'GET /characters': envelope(characterCatalog),
 };
 
 const fieldLabels = () => ({
   name: i18n.t('users.fields.name'),
+  character: i18n.t('users.fields.character'),
   email: i18n.t('users.fields.email'),
   currentPassword: i18n.t('account.fields.currentPassword'),
 });
@@ -55,6 +59,34 @@ const passwordForm = () =>
 
 const fillField = (label: string, value: string, form = profileForm()) => {
   fireEvent.change(form.getByLabelText(label), { target: { value } });
+};
+
+const profilePreview = () =>
+  screen.getByRole('region', { name: i18n.t('account.profile.preview') });
+
+const previewImage = () => profilePreview().querySelector('img');
+
+const characterSelect = async () => {
+  const character = profileForm().getByLabelText(fieldLabels().character);
+  await waitFor(() => {
+    expect(character).toBeEnabled();
+  });
+
+  return character;
+};
+
+const clearCharacter = async () => {
+  const form = screen.getByRole('form', {
+    name: i18n.t('account.profile.title'),
+  });
+  await waitFor(() => {
+    expect(form.querySelector('.ant-select-clear')).not.toBeNull();
+  });
+  const clear = form.querySelector('.ant-select-clear');
+  if (!clear) throw new Error('Clear button is missing');
+  fireEvent.mouseDown(clear);
+  fireEvent.mouseUp(clear);
+  fireEvent.click(clear);
 };
 
 const saveButton = () =>
@@ -244,6 +276,60 @@ describe('AccountPage', () => {
     });
   });
 
+  it('selects a character without asking for the password', async () => {
+    const requests = stubHttpRoutes(httpClient, {
+      ...signedInRoutes,
+      'PATCH /users/me': envelope({ ...user, character: spiderMan }),
+    });
+    await renderAccountPage();
+
+    fireEvent.mouseDown(await characterSelect());
+    fireEvent.click(await screen.findByTitle(spiderMan.name));
+    await save();
+
+    expect(
+      await screen.findByRole('heading', { name: i18n.t('auth.login.title') }),
+    ).toBeInTheDocument();
+    const update = requests.find(
+      (request) => requestKey(request) === 'PATCH /users/me',
+    );
+    expect(update && requestBody(update)).toEqual({
+      name: user.name,
+      email: user.email,
+      characterCode: spiderMan.code,
+    });
+  });
+
+  it('removes the current character', async () => {
+    const userWithCharacter = { ...user, character: spiderMan };
+    const requests = stubHttpRoutes(httpClient, {
+      ...signedInRoutes,
+      'GET /users/me': envelope(userWithCharacter),
+      'PATCH /users/me': envelope(user),
+    });
+    await renderAccountPage();
+
+    expect(
+      screen.getByRole('button', {
+        name: new RegExp(`${user.name} \\(${spiderMan.name}\\)`),
+      }),
+    ).toBeInTheDocument();
+    await clearCharacter();
+    await save();
+
+    expect(
+      await screen.findByRole('heading', { name: i18n.t('auth.login.title') }),
+    ).toBeInTheDocument();
+    const update = requests.find(
+      (request) => requestKey(request) === 'PATCH /users/me',
+    );
+    expect(update && requestBody(update)).toEqual({
+      name: user.name,
+      email: user.email,
+      characterCode: null,
+    });
+  });
+
   it('keeps the session and shows the API error when the update fails', async () => {
     stubHttpRoutes(httpClient, {
       ...signedInRoutes,
@@ -267,6 +353,80 @@ describe('AccountPage', () => {
     await waitFor(() => {
       expect(queryClient.getQueryData(sessionQuery.queryKey)).toEqual(user);
     });
+  });
+});
+
+describe('OwnProfilePreview', () => {
+  it('shows the avatar, the real name, and the character', async () => {
+    stubHttpRoutes(httpClient, {
+      ...signedInRoutes,
+      'GET /users/me': envelope({ ...user, character: spiderMan }),
+    });
+    await renderAccountPage();
+
+    const preview = within(profilePreview());
+    expect(previewImage()).toHaveAttribute('src', spiderMan.avatarPath);
+    expect(preview.getByText(user.name)).toBeInTheDocument();
+    expect(preview.getByText(spiderMan.name)).toBeInTheDocument();
+    expect(preview.getByText(spiderMan.universeLabel)).toBeInTheDocument();
+  });
+
+  it('shows the initials and no character without one', async () => {
+    stubHttpRoutes(httpClient, signedInRoutes);
+    await renderAccountPage();
+
+    const preview = within(profilePreview());
+    expect(previewImage()).toBeNull();
+    expect(preview.getByText('AL')).toBeInTheDocument();
+    expect(
+      preview.getByText(i18n.t('account.profile.noCharacter')),
+    ).toBeInTheDocument();
+  });
+
+  it('falls back to the initials when the character has no image', async () => {
+    stubHttpRoutes(httpClient, {
+      ...signedInRoutes,
+      'GET /users/me': envelope({
+        ...user,
+        character: { ...spiderMan, avatarPath: null },
+      }),
+    });
+    await renderAccountPage();
+
+    const preview = within(profilePreview());
+    expect(previewImage()).toBeNull();
+    expect(preview.getByText('AL')).toBeInTheDocument();
+    expect(preview.getByText(spiderMan.name)).toBeInTheDocument();
+  });
+
+  it('follows the selected character before saving', async () => {
+    const requests = stubHttpRoutes(httpClient, {
+      ...signedInRoutes,
+      'GET /users/me': envelope({ ...user, character: spiderMan }),
+    });
+    await renderAccountPage();
+
+    fireEvent.mouseDown(await characterSelect());
+    fireEvent.click(await screen.findByTitle(batman.name));
+
+    await waitFor(() => {
+      expect(previewImage()).toHaveAttribute('src', batman.avatarPath);
+    });
+    const preview = within(profilePreview());
+    expect(preview.getByText(batman.name)).toBeInTheDocument();
+    expect(preview.queryByText(spiderMan.name)).toBeNull();
+
+    await clearCharacter();
+
+    await waitFor(() => {
+      expect(previewImage()).toBeNull();
+    });
+    expect(preview.getByText('AL')).toBeInTheDocument();
+    expect(
+      preview.getByText(i18n.t('account.profile.noCharacter')),
+    ).toBeInTheDocument();
+    expect(preview.queryByText(batman.name)).toBeNull();
+    expect(requests.map(requestKey)).not.toContain('PATCH /users/me');
   });
 });
 

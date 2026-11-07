@@ -15,6 +15,7 @@ import {
   fetchRoles,
   updateRoleAbilities,
 } from '@/modules/authorization/infra/roles.api';
+import { fetchCharacters } from '@/modules/characters/infra/characters.api';
 import { userDetailSchema } from '@/modules/users/domain/user.schema';
 import {
   createUser,
@@ -252,6 +253,52 @@ describe('real backend API contracts', () => {
     await expectApiError(fetchUser(created.data.uuid), 404);
   });
 
+  it('lists the character catalog and assigns, changes, and removes a user character', async () => {
+    const characters = await fetchCharacters();
+
+    expect(characters).toHaveLength(12);
+    expect(new Set(characters.map(({ group }) => group))).toEqual(
+      new Set(['MARVEL', 'DC', 'OTHERS']),
+    );
+    expect(
+      characters.every(({ avatarPath }) =>
+        avatarPath?.startsWith('/characters/'),
+      ),
+    ).toBe(true);
+    const [first, second] = characters;
+    const userRole = (await fetchRoles()).find(({ role }) => role === 'USER');
+
+    if (!first || !second || !userRole) {
+      throw new Error('The backend did not seed the catalog or the USER role.');
+    }
+
+    const created = await createUser({
+      name: 'Character User',
+      email: 'character-user@example.com',
+      password: 'Character-user-password1!',
+      roleUuids: [userRole.uuid],
+      characterCode: first.code,
+    });
+
+    expect(created.data.character).toEqual(first);
+
+    const update = {
+      uuid: created.data.uuid,
+      name: created.data.name,
+      email: created.data.email,
+    };
+
+    expect(
+      (await updateUser({ ...update, characterCode: second.code })).data
+        .character,
+    ).toEqual(second);
+    expect((await updateUser(update)).data.character).toEqual(second);
+    expect(
+      (await updateUser({ ...update, characterCode: null })).data.character,
+    ).toBeNull();
+    await deleteUser(created.data.uuid);
+  });
+
   it('sorts users before pagination and sorts the role listing', async () => {
     const roles = await fetchRoles();
     const userRole = roles.find(({ role }) => role === 'USER');
@@ -329,6 +376,10 @@ describe('real backend API contracts', () => {
 
     const original = await fetchRole(userRole.uuid);
     const abilities = [{ action: 'READ', subject: 'USER' }] as const;
+
+    expect(original.abilities).not.toContainEqual(
+      expect.objectContaining(abilities[0]),
+    );
 
     try {
       const updated = await updateRoleAbilities({

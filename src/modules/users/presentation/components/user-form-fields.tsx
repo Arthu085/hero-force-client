@@ -2,6 +2,7 @@ import { Form, Input } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { Role } from '@/modules/authorization/domain/role.schema';
 import { RoleSelect } from '@/modules/authorization/presentation/components/role-select';
+import { CharacterSelect } from '@/modules/characters/presentation/components/character-select';
 import { zodRule } from '@/shared/forms/zod-rule';
 import { createUserFormSchema } from '../../domain/user-form.schemas';
 
@@ -48,6 +49,13 @@ export const UserFormFields = ({
         rules={[zodRule(shape.roleUuids)]}
       >
         <RoleSelect mode="multiple" assignedRoles={assignedRoles} />
+      </Form.Item>
+      <Form.Item
+        name="characterCode"
+        label={t('users.fields.character')}
+        rules={[zodRule(shape.characterCode)]}
+      >
+        <CharacterSelect />
       </Form.Item>
     </>
   );

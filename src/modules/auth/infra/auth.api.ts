@@ -1,6 +1,7 @@
 import { parseApiData } from '@/core/http/api-envelope';
 import { getHttpStatus } from '@/core/http/api-error';
 import { httpClient } from '@/core/http/http-client';
+import type { RegisterForm } from '@/modules/users/domain/user-form.schemas';
 import {
   type UserDetail,
   userDetailSchema,
@@ -40,6 +41,10 @@ export const login = async (credentials: LoginForm): Promise<UserDetail> => {
   );
 
   return parseApiData(userDetailSchema, response.data);
+};
+
+export const register = async (payload: RegisterForm): Promise<void> => {
+  await httpClient.post('/users/register', payload);
 };
 
 export const logout = async (): Promise<void> => {

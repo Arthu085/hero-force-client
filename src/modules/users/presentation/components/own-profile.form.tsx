@@ -1,5 +1,7 @@
 import { Button, Flex, Form, Input } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useCharacters } from '@/modules/characters/infra/characters.queries';
+import { CharacterSelect } from '@/modules/characters/presentation/components/character-select';
 import { useFeedbackModal } from '@/shared/feedback/use-feedback-modal';
 import { zodRule } from '@/shared/forms/zod-rule';
 import {
@@ -11,6 +13,7 @@ import type { UserDetail } from '../../domain/user.schema';
 import { useUpdateOwnProfile } from '../../infra/users.queries';
 import { useSessionsEndedNotification } from '../use-sessions-ended-notification';
 import { AccountSectionTitle } from './account-section-title';
+import { OwnProfilePreview } from './own-profile-preview';
 
 interface OwnProfileFormProps {
   user: UserDetail;
@@ -23,9 +26,21 @@ export const OwnProfileForm = ({ user }: OwnProfileFormProps) => {
   const [form] = Form.useForm<UpdateOwnProfileForm>();
   const name = Form.useWatch('name', form);
   const email = Form.useWatch('email', form);
+  const characterCode = Form.useWatch('characterCode', form);
+  const currentCharacterCode = user.character?.code ?? null;
+  const { data: characters = [] } = useCharacters();
+  const selectedCharacterCode =
+    characterCode === undefined ? currentCharacterCode : characterCode;
+  const selectedCharacter =
+    selectedCharacterCode === currentCharacterCode
+      ? user.character
+      : (characters.find(({ code }) => code === selectedCharacterCode) ?? null);
   const updateMutation = useUpdateOwnProfile();
   const emailChanged = !isSameEmail(email ?? user.email, user.email);
-  const hasChanges = emailChanged || (name ?? user.name) !== user.name;
+  const hasChanges =
+    emailChanged ||
+    (name ?? user.name) !== user.name ||
+    (characterCode !== undefined && characterCode !== currentCharacterCode);
   const { shape } = updateOwnProfileFormSchema;
 
   const notifyProfileUpdated = () => {
@@ -36,11 +51,15 @@ export const OwnProfileForm = ({ user }: OwnProfileFormProps) => {
   };
 
   const handleFinish = (values: UpdateOwnProfileForm) => {
-    const { currentPassword, ...profile } =
+    const { currentPassword, characterCode, ...profile } =
       updateOwnProfileFormSchema.parse(values);
 
     updateMutation.mutate(
-      emailChanged ? { ...profile, currentPassword } : profile,
+      {
+        ...profile,
+        ...(characterCode !== currentCharacterCode ? { characterCode } : {}),
+        ...(emailChanged ? { currentPassword } : {}),
+      },
       { onSuccess: notifyProfileUpdated, onError: showError },
     );
   };
@@ -48,12 +67,19 @@ export const OwnProfileForm = ({ user }: OwnProfileFormProps) => {
   return (
     <Flex vertical gap="middle">
       <AccountSectionTitle>{t('account.profile.title')}</AccountSectionTitle>
+      <OwnProfilePreview
+        user={{ name: user.name, character: selectedCharacter }}
+      />
       <Form<UpdateOwnProfileForm>
         aria-label={t('account.profile.title')}
         form={form}
         layout="vertical"
         requiredMark={false}
-        initialValues={{ name: user.name, email: user.email }}
+        initialValues={{
+          name: user.name,
+          email: user.email,
+          characterCode: currentCharacterCode,
+        }}
         disabled={updateMutation.isPending}
         onFinish={handleFinish}
       >
@@ -70,6 +96,13 @@ export const OwnProfileForm = ({ user }: OwnProfileFormProps) => {
           rules={[zodRule(shape.email)]}
         >
           <Input autoComplete="email" />
+        </Form.Item>
+        <Form.Item
+          name="characterCode"
+          label={t('users.fields.character')}
+          rules={[zodRule(shape.characterCode)]}
+        >
+          <CharacterSelect />
         </Form.Item>
         {emailChanged && (
           <Form.Item

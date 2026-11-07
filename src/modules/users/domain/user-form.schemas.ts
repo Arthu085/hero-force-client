@@ -24,10 +24,13 @@ const roleUuidsSchema = z
   .array(z.string(), { error: required })
   .min(1, { error: required });
 
+const characterCodeSchema = z.string().min(1).nullable().default(null);
+
 export const updateUserFormSchema = z.object({
   name: nameSchema,
   email: emailSchema,
   roleUuids: roleUuidsSchema,
+  characterCode: characterCodeSchema,
 });
 
 export const createUserFormSchema = updateUserFormSchema.extend({
@@ -37,6 +40,7 @@ export const createUserFormSchema = updateUserFormSchema.extend({
 export const updateOwnProfileFormSchema = z.object({
   name: nameSchema,
   email: emailSchema,
+  characterCode: characterCodeSchema,
   currentPassword: loginFormSchema.shape.password.optional(),
 });
 
@@ -53,6 +57,13 @@ export const confirmNewPasswordSchema = (newPassword: unknown) =>
       error: () => i18n.t('validation.passwordMismatch'),
     });
 
+export const registerFormSchema = z.object({
+  name: nameSchema,
+  email: emailSchema,
+  password: newPasswordSchema,
+  characterCode: characterCodeSchema,
+});
+
 export const isSameEmail = (email: string, otherEmail: string) =>
   email.trim().toLowerCase() === otherEmail.trim().toLowerCase();
 
@@ -67,7 +78,8 @@ export const defaultUserFilters: ListFilters<typeof userFiltersShape> = {
   status: 'ACTIVE',
 };
 
-export type UpdateUserForm = z.infer<typeof updateUserFormSchema>;
-export type CreateUserForm = z.infer<typeof createUserFormSchema>;
-export type UpdateOwnProfileForm = z.infer<typeof updateOwnProfileFormSchema>;
+export type UpdateUserForm = z.input<typeof updateUserFormSchema>;
+export type CreateUserForm = z.input<typeof createUserFormSchema>;
+export type RegisterForm = z.input<typeof registerFormSchema>;
+export type UpdateOwnProfileForm = z.input<typeof updateOwnProfileFormSchema>;
 export type ChangeOwnPasswordForm = z.infer<typeof changeOwnPasswordFormSchema>;

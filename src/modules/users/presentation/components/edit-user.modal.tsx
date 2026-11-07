@@ -72,10 +72,13 @@ export const EditUserModal = ({ user, onClose }: EditUserModalProps) => {
       parsed.roleUuids.some(
         (uuid) => !user.roles.some((role) => role.uuid === uuid),
       );
+    const characterChanged =
+      parsed.characterCode !== (user.character?.code ?? null);
     const payload: UpdateUserPayload = {
       uuid: user.uuid,
       name: parsed.name,
       email: parsed.email,
+      ...(characterChanged ? { characterCode: parsed.characterCode } : {}),
       ...(rolesChanged ? { roleUuids: parsed.roleUuids } : {}),
     };
 
@@ -104,6 +107,7 @@ export const EditUserModal = ({ user, onClose }: EditUserModalProps) => {
               name: user.name,
               email: user.email,
               roleUuids: user.roles.map(({ uuid }) => uuid),
+              characterCode: user.character?.code ?? null,
             }
           : undefined
       }

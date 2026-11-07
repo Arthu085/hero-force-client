@@ -29,10 +29,11 @@ import type { ListParams } from '@/shared/list/use-list-params';
 import type { ListSorting } from '@/shared/list/use-list-sorting';
 import type { z } from 'zod';
 import type { userFiltersShape } from '../../domain/user-form.schemas';
-import type {
-  UserDetail,
-  UserListItem,
-  userSortBySchema,
+import {
+  formatUserDisplayName,
+  type UserDetail,
+  type UserListItem,
+  type userSortBySchema,
 } from '../../domain/user.schema';
 import {
   useDeleteUser,
@@ -40,6 +41,7 @@ import {
   userQuery,
   useUpdateUserStatus,
 } from '../../infra/users.queries';
+import { UserAvatar } from './user-avatar';
 
 interface LoadingUser {
   uuid: string;
@@ -125,10 +127,11 @@ export const UsersTable = ({
       title: t('users.fields.name'),
       dataIndex: 'name',
       ...listSorting.columnSorting('name'),
-      render: (_, { uuid, name }) => (
+      render: (_, user) => (
         <Space size="small">
-          {name}
-          {uuid === sessionUser?.uuid && (
+          <UserAvatar user={user} size="small" />
+          {formatUserDisplayName(user)}
+          {user.uuid === sessionUser?.uuid && (
             <Typography.Text type="secondary">
               {t('users.currentUser')}
             </Typography.Text>

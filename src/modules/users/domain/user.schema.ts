@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { roleSchema } from '@/modules/authorization/domain/role.schema';
+import { characterSchema } from '@/modules/characters/domain/character.schema';
 import { recordStatusSchema } from '@/shared/domain/record-status.schema';
 
 export const userSortBySchema = z.enum([
@@ -16,6 +17,7 @@ export const userListItemSchema = z.object({
   statusLabel: z.string(),
   roles: z.array(roleSchema),
   emailConfirmedAt: z.iso.datetime().nullable(),
+  character: characterSchema.nullable(),
 });
 
 export const userDetailSchema = userListItemSchema.extend({
@@ -28,3 +30,8 @@ export const userDetailSchema = userListItemSchema.extend({
 
 export type UserListItem = z.infer<typeof userListItemSchema>;
 export type UserDetail = z.infer<typeof userDetailSchema>;
+
+export type UserIdentity = Pick<UserListItem, 'name' | 'character'>;
+
+export const formatUserDisplayName = ({ name, character }: UserIdentity) =>
+  character ? `${name} (${character.name})` : name;
