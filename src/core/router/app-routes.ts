@@ -5,6 +5,7 @@ export const AppRoutes = {
   ACCOUNT: '/account',
   CHANGE_REQUESTS: '/account/change-requests',
   LOGIN: '/login',
+  REGISTER: '/register',
   FORGOT_PASSWORD: '/forgot-password',
   RESET_PASSWORD: '/reset-password',
   CONFIRM_EMAIL: '/confirm-email',

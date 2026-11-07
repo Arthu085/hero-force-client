@@ -20,12 +20,25 @@ interface DiffRow {
   requested: ReactNode;
 }
 
-const PROFILE_FIELDS: UserProfileField[] = ['name', 'email', 'roles'];
+const PROFILE_FIELDS: UserProfileField[] = [
+  'name',
+  'email',
+  'roles',
+  'character',
+];
 
 const VALUE_COLUMN_WIDTH = '40%';
 
-const renderValue = (values: UserProfileValues, field: UserProfileField) =>
-  field === 'roles' ? <RoleTags roles={values.roles} /> : values[field];
+const renderValue = (values: UserProfileValues, field: UserProfileField) => {
+  switch (field) {
+    case 'roles':
+      return <RoleTags roles={values.roles} />;
+    case 'character':
+      return values.character?.name ?? '-';
+    default:
+      return values[field];
+  }
+};
 
 export const UserChangeRequestDiffTable = ({
   request,

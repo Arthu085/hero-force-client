@@ -98,6 +98,14 @@ export const routes: RouteObject[] = [
                 }),
               },
               {
+                path: AppRoutes.REGISTER,
+                lazy: async () => ({
+                  Component: (
+                    await import('@/modules/auth/presentation/pages/register.page')
+                  ).RegisterPage,
+                }),
+              },
+              {
                 path: AppRoutes.FORGOT_PASSWORD,
                 lazy: async () => ({
                   Component: (

@@ -5,7 +5,9 @@ import { Link } from 'react-router';
 import { AppRoutes } from '@/core/router/app-routes';
 import { useLogout, useSession } from '@/modules/auth/infra/auth.queries';
 import { hasAdminRole } from '@/modules/authorization/domain/role.schema';
+import { formatUserDisplayName } from '@/modules/users/domain/user.schema';
 import { useOwnChangeRequests } from '@/modules/users/infra/user-change-requests.queries';
+import { UserAvatar } from '@/modules/users/presentation/components/user-avatar';
 
 export const UserMenu = () => {
   const { t } = useTranslation();
@@ -49,11 +51,11 @@ export const UserMenu = () => {
     <Dropdown menu={{ items: userMenuItems }} trigger={['click']}>
       <Button
         type="text"
-        icon={<UserOutlined />}
+        icon={user ? <UserAvatar user={user} size="small" /> : <UserOutlined />}
         loading={logoutMutation.isPending}
       >
         <Badge dot={changeRequests.length > 0} offset={[4, 0]}>
-          {user?.name}
+          {user && formatUserDisplayName(user)}
         </Badge>
       </Button>
     </Dropdown>

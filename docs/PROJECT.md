@@ -22,8 +22,9 @@ The Hero Force web client for the
 ## Current scope
 
 The foundation is in place: application providers, routing with not-found and error pages, the
-HTTP client, and localization. The `auth` module adds sign-in, sign-out,
-password recovery, email confirmation, session refresh, and route guards. The main layout adds ability-filtered
+HTTP client, and localization. The `auth` module adds sign-in, public registration, sign-out,
+password recovery, email confirmation, session refresh, and route guards. The `characters` module
+lists the API's superhero catalog for the optional character a user can pick. The main layout adds ability-filtered
 navigation and a language switcher. Shared list and form building blocks (paginated tables with
 URL-synced pagination and filters, form modals, and API success and error feedback) back the `users` module,
 which manages users at `/users`, lets every signed-in user edit their own profile and change their
@@ -149,14 +150,18 @@ The `auth` module mirrors the API's cookie session; the browser never sees a tok
   login page; on `signed-in` it removes every other cached query and refetches the session, so a
   tab left on a guest page moves into the app.
 - **Guards:** `AuthGuard` wraps protected routes and redirects to `/login`; `GuestGuard` wraps
-  login, forgot-password, and resend-confirmation and always sends a signed-in user home, so every
+  login, registration, forgot-password, and resend-confirmation and always sends a signed-in user home, so every
   login lands on the home page. Both show a full-page loader while the session loads; the guest guard resolves before
   mounting the authentication card, so the card does not resize around that loader.
 - **Pages:** login, forgot-password, and reset-password (`/reset-password?token=...`, the API's
   default `MAIL_RESET_PASSWORD_PATH`) render inside `AuthLayout`. Reset-password works with or
-  without a session. There is no self-registration. A failed submit on any of these pages, and on
-  the email confirmation pages below, opens the error dialog; a rejected reset link's dialog links
-  to forgot-password.
+  without a session. A failed submit on any of these pages, and on the email confirmation pages
+  below, opens the error dialog; a rejected reset link's dialog links to forgot-password.
+- **Registration:** `/register`, linked from the login page, asks for name, email, password, its
+  confirmation, and an optional character, and posts `POST /users/register` without the
+  confirmation. The API always assigns the `USER` role and answers `202` the same way for new and
+  existing emails, so the page always ends with a result explaining that the email must be
+  confirmed before signing in, with a link back to login.
 - **Email confirmation:** `/confirm-email?token=...` (the API's default `MAIL_CONFIRM_EMAIL_PATH`)
   confirms the address only when the user clicks its button, so link scanners and repeated effects
   cannot spend the single-use token; it works with or without a session. A rejected link's error
@@ -301,10 +306,18 @@ Users menu entry needs the same ability.
   The signed-in user's row is marked by comparing its uuid with the session user's. The status
   filter defaults to `ACTIVE` and cannot be emptied. The role filter is shown only with
   `READ` on `ROLE`.
-- **Details:** a modal with the user's email, roles, status, email confirmation, and authorship.
+- **Characters:** a user may have one superhero character from the API's catalog
+  (`GET /characters`, cached for the session as it never changes). `CharacterSelect`
+  (`src/modules/characters/`) groups the catalog by universe, searches by name, and can be cleared.
+  Forms send `characterCode`: a code selects a character and `null` removes it; edit and account
+  forms send it only when it changed. Wherever a user is named (list, details, header, home
+  greeting), `formatUserDisplayName` shows `Real Name (Character Name)`, or the real name without
+  a character. `UserAvatar` shows the character's `avatarPath`, an image served from `public/characters/`,
+  and falls back to the initials of the real name when there is no character or no image.
+- **Details:** a modal with the user's character, email, roles, status, email confirmation, and authorship.
   Details and edit request `GET /users/:uuid` on every opening, so they always show current data;
   both are disabled for inactive users, which the API does not return.
-- **Create and edit:** `FormModal` forms for name, email, roles, and, on create, a password, with
+- **Create and edit:** `FormModal` forms for name, email, roles, an optional character, and, on create, a password, with
   the API's limits (name up to 150 characters). Editing loads the user first, because the list has
   no email. Editing your own
   profile ends your session, as the API defines. Unchanged role assignments are omitted from the
@@ -333,11 +346,11 @@ without the ability are hidden.
 
 ### Account
 
-`/account` lets every signed-in user change their own name and email through `PATCH /users/me`
+`/account` lets every signed-in user change their own name, email, and character through `PATCH /users/me`
 and their own password through `PATCH /users/me/password`, which need no ability, and shows their
 access read-only. No page changes another user's password; the API has no route for it.
 
-- **Form:** name and email with the users form limits. Save is enabled only when a value changed;
+- **Form:** name, email, and the optional character with the users form limits. Save is enabled only when a value changed;
   emails are compared trimmed and case-insensitively, as the API normalizes them. The current
   password field appears only when the email changes, because the API requires it then (`422`
   when missing, `403` when wrong) and ignores it otherwise. A failed save opens the error dialog.
@@ -373,9 +386,9 @@ list is not paginated; the API keeps at most one pending request per user, so th
 account page read the same query for the pending count.
 
 - **Diff:** each request is a card with the requester (or "a removed user" when the API sends no
-  name), the request and expiry dates, and a table of name, email, and roles with the values when
+  name), the request and expiry dates, and a table of name, email, roles, and character with the values when
   the request was made (`current`) next to the requested ones. Changed fields are tagged; emails
-  are compared like the account form, roles by uuid.
+  are compared like the account form, roles by uuid, and characters by code.
 - **Decisions:** approve and reject each ask for confirmation first.
   `POST /users/me/change-requests/:uuid/approve` applies the change and ends every session of the
   user, so on success the mutation drops the CSRF token and calls `clearSession`, and an

@@ -5,6 +5,7 @@ import { AppRoutes } from '@/core/router/app-routes';
 import { useSession } from '@/modules/auth/infra/auth.queries';
 import { hasAdminRole } from '@/modules/authorization/domain/role.schema';
 import { useAbilities } from '@/modules/authorization/infra/abilities.queries';
+import { formatUserDisplayName } from '@/modules/users/domain/user.schema';
 import { useOwnChangeRequests } from '@/modules/users/infra/user-change-requests.queries';
 import { homeShortcuts, visibleHomeShortcuts } from '../home-shortcuts';
 
@@ -24,7 +25,9 @@ export const HomePage = () => {
     <Flex vertical gap="large">
       <div>
         <Typography.Title level={2}>
-          {t('home.greeting', { name: user?.name })}
+          {t('home.greeting', {
+            name: user ? formatUserDisplayName(user) : '',
+          })}
         </Typography.Title>
         <Typography.Text type="secondary">
           {t('home.description')}

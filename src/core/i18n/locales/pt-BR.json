@@ -120,7 +120,8 @@
       "createdBy": "Criado por",
       "createdAt": "Criado em",
       "updatedBy": "Atualizado por",
-      "updatedAt": "Atualizado em"
+      "updatedAt": "Atualizado em",
+      "character": "Personagem"
     },
     "create": {
       "title": "Novo usuário"
@@ -222,7 +223,8 @@
       "title": "Entrar",
       "submit": "Entrar",
       "forgotPassword": "Esqueceu sua senha?",
-      "resendConfirmation": "Reenviar e-mail de confirmação"
+      "resendConfirmation": "Reenviar e-mail de confirmação",
+      "register": "Criar uma conta"
     },
     "forgotPassword": {
       "title": "Recuperar senha",
@@ -257,6 +259,15 @@
       "missingTokenTitle": "Link inválido",
       "missingTokenSubtitle": "O link de confirmação de e-mail está incompleto.",
       "requestNewLink": "Solicitar um novo link"
+    },
+    "register": {
+      "title": "Criar uma conta",
+      "subtitle": "Junte-se à Hero Force. Você confirmará seu e-mail antes de entrar.",
+      "confirmPassword": "Confirmar senha",
+      "characterHelp": "Opcional. Você pode alterá-lo depois na sua conta.",
+      "submit": "Criar conta",
+      "successTitle": "Confirme seu e-mail",
+      "successSubtitle": "Se o e-mail puder ser usado, enviamos um link de confirmação para ele. Confirme seu e-mail antes de entrar."
     }
   },
   "validation": {
@@ -278,6 +289,11 @@
       "title": "Nova versão disponível",
       "description": "Recarregue para usar a versão mais recente da aplicação.",
       "reload": "Recarregar"
+    }
+  },
+  "characters": {
+    "select": {
+      "placeholder": "Nenhum personagem"
     }
   }
 }

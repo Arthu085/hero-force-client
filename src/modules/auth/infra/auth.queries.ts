@@ -12,6 +12,7 @@ import {
   fetchSessionUser,
   login,
   logout,
+  register,
   requestPasswordReset,
   resendEmailConfirmation,
   resetPassword,
@@ -105,6 +106,8 @@ export const useLogout = () => {
     },
   });
 };
+
+export const useRegister = () => useMutation({ mutationFn: register });
 
 export const useForgotPassword = () =>
   useMutation({ mutationFn: requestPasswordReset });

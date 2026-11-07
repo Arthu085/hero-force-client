@@ -32,6 +32,7 @@ const sessionUser = (roles: Role[]): UserDetail => ({
   updaterName: null,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
+  character: null,
 });
 
 const changeRequest: UserChangeRequest = {
@@ -39,8 +40,18 @@ const changeRequest: UserChangeRequest = {
   status: 'PENDING',
   statusLabel: 'Pendente',
   requesterName: 'Grace Hopper',
-  current: { name: 'Ada Lovelace', email: 'ada@example.com', roles: [] },
-  requested: { name: 'Ada King', email: 'ada@example.com', roles: [] },
+  current: {
+    name: 'Ada Lovelace',
+    email: 'ada@example.com',
+    roles: [],
+    character: null,
+  },
+  requested: {
+    name: 'Ada King',
+    email: 'ada@example.com',
+    roles: [],
+    character: null,
+  },
   expiresAt: '2026-01-03T12:00:00.000Z',
   createdAt: '2026-01-02T12:00:00.000Z',
 };

@@ -1,11 +1,13 @@
 import { z } from 'zod';
 import { roleSchema } from '@/modules/authorization/domain/role.schema';
+import { characterSchema } from '@/modules/characters/domain/character.schema';
 import { isSameEmail } from './user-form.schemas';
 
 const userProfileValuesSchema = z.object({
   name: z.string(),
   email: z.string(),
   roles: z.array(roleSchema),
+  character: characterSchema.nullable(),
 });
 
 export const userChangeRequestSchema = z.object({
@@ -47,5 +49,7 @@ export const isProfileFieldChanged = (
       return !isSameEmail(current.email, requested.email);
     case 'roles':
       return !sameRoles(current.roles, requested.roles);
+    case 'character':
+      return current.character?.code !== requested.character?.code;
   }
 };

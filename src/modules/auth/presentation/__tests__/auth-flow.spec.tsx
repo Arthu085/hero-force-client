@@ -13,6 +13,7 @@ import {
   stubHttpRoutes,
 } from '@/test/http-stub';
 import { renderRoute } from '@/test/render-route';
+import { characterCatalog, spiderMan } from '@/test/characters';
 
 const user: UserDetail = {
   uuid: '6f1c2a54-2d0e-4a4b-9a43-2f1f1d7c9b10',
@@ -34,6 +35,7 @@ const user: UserDetail = {
   updaterName: null,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
+  character: null,
 };
 
 const envelope = (data: unknown) => ({ status: 200, data: { data, meta: {} } });
@@ -213,6 +215,132 @@ describe('LoginPage', () => {
     expect(dialog).toHaveTextContent('Invalid credentials');
     expect(within(dialog).queryByRole('link')).toBeNull();
     expect(screen.queryByRole('alert')).toBeNull();
+  });
+});
+
+describe('RegisterPage', () => {
+  const registerRoutes = {
+    ...signedOutRoutes,
+    'GET /characters': envelope(characterCatalog),
+  };
+
+  const fillRegistration = (confirmPassword = 'New-password1') => {
+    fillField(i18n.t('users.fields.name'), 'Peter Parker');
+    fillField(i18n.t('auth.fields.email'), ' peter@example.com ');
+    fillField(i18n.t('auth.fields.password'), 'New-password1');
+    fillField(i18n.t('auth.register.confirmPassword'), confirmPassword);
+  };
+
+  const openRegistration = async () => {
+    await screen.findByRole('heading', { name: i18n.t('auth.register.title') });
+    await waitFor(() =>
+      expect(
+        screen.getByLabelText(i18n.t('users.fields.character')),
+      ).toBeEnabled(),
+    );
+  };
+
+  it('opens from the login page', async () => {
+    stubHttpRoutes(httpClient, registerRoutes);
+    const { router } = renderRoute(AppRoutes.LOGIN);
+
+    fireEvent.click(
+      await screen.findByRole('link', { name: i18n.t('auth.login.register') }),
+    );
+
+    await openRegistration();
+    expect(router.state.location.pathname).toBe(AppRoutes.REGISTER);
+  });
+
+  it('registers with a character and explains that the email must be confirmed', async () => {
+    const requests = stubHttpRoutes(httpClient, {
+      ...registerRoutes,
+      'POST /users/register': { status: 202, data: { data: null, meta: {} } },
+    });
+    renderRoute(AppRoutes.REGISTER);
+
+    await openRegistration();
+    fillRegistration();
+    fireEvent.mouseDown(
+      screen.getByLabelText(i18n.t('users.fields.character')),
+    );
+    fireEvent.click(await screen.findByTitle(spiderMan.name));
+    submit(i18n.t('auth.register.submit'));
+
+    expect(
+      await screen.findByText(i18n.t('auth.register.successTitle')),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(i18n.t('auth.register.successSubtitle')),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: i18n.t('auth.backToLogin') }),
+    ).toHaveAttribute('href', AppRoutes.LOGIN);
+    const registration = requests.find(
+      (request) => requestKey(request) === 'POST /users/register',
+    );
+    expect(registration && requestBody(registration)).toEqual({
+      name: 'Peter Parker',
+      email: 'peter@example.com',
+      password: 'New-password1',
+      characterCode: spiderMan.code,
+    });
+  });
+
+  it('registers without a character', async () => {
+    const requests = stubHttpRoutes(httpClient, {
+      ...registerRoutes,
+      'POST /users/register': { status: 202, data: { data: null, meta: {} } },
+    });
+    renderRoute(AppRoutes.REGISTER);
+
+    await openRegistration();
+    fillRegistration();
+    submit(i18n.t('auth.register.submit'));
+
+    await screen.findByText(i18n.t('auth.register.successTitle'));
+    const registration = requests.find(
+      (request) => requestKey(request) === 'POST /users/register',
+    );
+    expect(registration && requestBody(registration)).toMatchObject({
+      characterCode: null,
+    });
+  });
+
+  it('requires matching passwords before calling the API', async () => {
+    const requests = stubHttpRoutes(httpClient, registerRoutes);
+    renderRoute(AppRoutes.REGISTER);
+
+    await openRegistration();
+    fillRegistration('Other-password1');
+    submit(i18n.t('auth.register.submit'));
+
+    expect(
+      await screen.findByText(i18n.t('validation.passwordMismatch')),
+    ).toBeInTheDocument();
+    expect(requests.map(requestKey)).not.toContain('POST /users/register');
+  });
+
+  it('shows a failed registration in an error dialog and keeps the form', async () => {
+    stubHttpRoutes(httpClient, {
+      ...registerRoutes,
+      'POST /users/register': {
+        status: 429,
+        data: { statusCode: 429, message: 'Too many requests' },
+      },
+    });
+    renderRoute(AppRoutes.REGISTER);
+
+    await openRegistration();
+    fillRegistration();
+    submit(i18n.t('auth.register.submit'));
+
+    expect(await findDialog(i18n.t('feedback.error'))).toHaveTextContent(
+      'Too many requests',
+    );
+    expect(screen.getByLabelText(i18n.t('users.fields.name'))).toHaveValue(
+      'Peter Parker',
+    );
   });
 });
 

@@ -66,6 +66,7 @@ const sessionUser = (roles: Role[]): UserDetail => ({
   updaterName: null,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
+  character: null,
 });
 
 const readRoleOnly: Ability[] = [{ action: 'READ', subject: 'ROLE' }];

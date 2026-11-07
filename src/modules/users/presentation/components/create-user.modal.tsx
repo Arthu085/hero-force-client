@@ -22,6 +22,7 @@ export const CreateUserModal = ({ open, onClose }: CreateUserModalProps) => {
     <FormModal<CreateUserForm>
       open={open}
       title={t('users.create.title')}
+      initialValues={{ characterCode: null }}
       submitting={createMutation.isPending}
       onSubmit={(values) => {
         createMutation.mutate(createUserFormSchema.parse(values), {

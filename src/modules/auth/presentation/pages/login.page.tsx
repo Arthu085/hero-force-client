@@ -66,9 +66,12 @@ export const LoginPage = () => {
           {t('auth.login.submit')}
         </Button>
       </Form>
-      <Link to={AppRoutes.FORGOT_PASSWORD}>
-        {t('auth.login.forgotPassword')}
-      </Link>
+      <Flex justify="space-between" gap="small" wrap>
+        <Link to={AppRoutes.FORGOT_PASSWORD}>
+          {t('auth.login.forgotPassword')}
+        </Link>
+        <Link to={AppRoutes.REGISTER}>{t('auth.login.register')}</Link>
+      </Flex>
     </Flex>
   );
 };
