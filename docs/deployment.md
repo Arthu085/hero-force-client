@@ -23,9 +23,11 @@ npm run build
 ```
 
 All three variables are required. The build and browser startup use the same environment schema;
-missing or invalid configuration fails before publication. `VITE_API_URL` is the public origin
-without `/api`, a query, or a fragment. The HTTP client appends `/api` itself. Use HTTPS in
-production so requests do not become mixed content. The current application expects deployment
+missing or invalid configuration fails before publication. `VITE_API_URL` must be an HTTPS origin
+without any path, including `/api`, credentials, a query, or a fragment. Optional trailing slashes
+are normalized away, and the HTTP client appends `/api` itself. HTTP is accepted only on
+`localhost`, `127.0.0.1`, or `[::1]` with optional ports for local development and testing; these
+rules also apply at browser startup. The current application expects deployment
 at `/`, including its routes, service worker scope, and static asset paths.
 
 Vite replaces `VITE_*` values at build time. They are public browser configuration, never secrets;

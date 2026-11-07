@@ -82,12 +82,15 @@ build time and startup through the shared
 
 | Variable        | Required | Example                 | Purpose                                                            |
 | --------------- | -------- | ----------------------- | ------------------------------------------------------------------ |
-| `VITE_API_URL`  | Yes      | `http://localhost:3000` | API base URL without the `/api` prefix                             |
+| `VITE_API_URL`  | Yes      | `http://localhost:3000` | API origin without a path                                          |
 | `VITE_APP_NAME` | Yes      | `Hero Force`            | Application name for the browser tab, accessible branding, and PWA |
 | `VITE_APP_MARK` | Yes      | `HF`                    | Short name for the installed PWA                                   |
 
 These values are read when Vite starts or builds; restart the development server or rebuild after
-changing them.
+changing them. `VITE_API_URL` must be an origin without any path, including `/api`, credentials,
+query, or fragment. Trailing slashes are accepted and normalized away. Public origins require
+HTTPS; HTTP is allowed only for `localhost`, `127.0.0.1`, and `[::1]`, with optional ports, for
+local development and testing. The same rules apply during production builds and browser startup.
 
 ## Commands
 
