@@ -5,6 +5,8 @@ export const characterSchema = z.object({
   name: z.string(),
   universe: z.string().min(1),
   universeLabel: z.string(),
+  group: z.string().min(1),
+  groupLabel: z.string(),
   avatarPath: z.string().nullable(),
 });
 

@@ -161,7 +161,9 @@ The `auth` module mirrors the API's cookie session; the browser never sees a tok
   confirmation, and an optional character, and posts `POST /users/register` without the
   confirmation. The API always assigns the `USER` role and answers `202` the same way for new and
   existing emails, so the page always ends with a result explaining that the email must be
-  confirmed before signing in, with a link back to login.
+  confirmed before signing in, with a link back to login. The `USER` role grants no abilities by
+  default (only admins list and manage users), so a self-registered user sees the home page and
+  `/account` but no Users menu entry or shortcut, and `/users` shows the forbidden page.
 - **Email confirmation:** `/confirm-email?token=...` (the API's default `MAIL_CONFIRM_EMAIL_PATH`)
   confirms the address only when the user clicks its button, so link scanners and repeated effects
   cannot spend the single-use token; it works with or without a session. A rejected link's error
@@ -308,12 +310,18 @@ Users menu entry needs the same ability.
   `READ` on `ROLE`.
 - **Characters:** a user may have one superhero character from the API's catalog
   (`GET /characters`, cached for the session as it never changes). `CharacterSelect`
-  (`src/modules/characters/`) groups the catalog by universe, searches by name, and can be cleared.
+  (`src/modules/characters/`) groups the catalog by the API's `group` (Marvel, DC, and Others,
+  which holds the Dark Horse and Image characters) under its localized `groupLabel`, searches by
+  name, and can be cleared. The details modal shows the character's `universeLabel`.
   Forms send `characterCode`: a code selects a character and `null` removes it; edit and account
   forms send it only when it changed. Wherever a user is named (list, details, header, home
   greeting), `formatUserDisplayName` shows `Real Name (Character Name)`, or the real name without
   a character. `UserAvatar` shows the character's `avatarPath`, an image served from `public/characters/`,
-  and falls back to the initials of the real name when there is no character or no image.
+  and falls back to the initials of the real name when there is no character or no image. Every
+  avatar renders through `InitialsAvatar` (registration and form options, users list, details,
+  header menu, and account). `public/characters/` holds one original comic-style SVG portrait per
+  catalog character (12): a `0 0 128 128` circle with an opaque background and dark outline ring,
+  ids prefixed with the file's slug, and no logos, text, scripts, or external references.
 - **Details:** a modal with the user's character, email, roles, status, email confirmation, and authorship.
   Details and edit request `GET /users/:uuid` on every opening, so they always show current data;
   both are disabled for inactive users, which the API does not return.
@@ -350,6 +358,9 @@ without the ability are hidden.
 and their own password through `PATCH /users/me/password`, which need no ability, and shows their
 access read-only. No page changes another user's password; the API has no route for it.
 
+- **Preview:** above the form, a large avatar with the real name and the selected character's
+  name and universe, or a "no character selected" hint with the initials avatar. It follows the
+  character field before saving, looking the selected code up in the `GET /characters` catalog.
 - **Form:** name, email, and the optional character with the users form limits. Save is enabled only when a value changed;
   emails are compared trimmed and case-insensitively, as the API normalizes them. The current
   password field appears only when the email changes, because the API requires it then (`422`

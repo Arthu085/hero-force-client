@@ -3,7 +3,12 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { Form } from 'antd';
 import { describe, expect, it } from 'vitest';
 import { httpClient } from '@/core/http/http-client';
-import { characterCatalog, hellboy, spiderMan } from '@/test/characters';
+import {
+  batman,
+  characterCatalog,
+  hellboy,
+  spiderMan,
+} from '@/test/characters';
 import { stubHttpRoutes, type StubResponse } from '@/test/http-stub';
 import { CharacterSelect } from '../character-select';
 
@@ -36,17 +41,30 @@ const renderSelect = ({
 const combobox = () => screen.getByRole('combobox', { name: 'Character' });
 
 describe('CharacterSelect', () => {
-  it('lists the catalog grouped by universe and selects a character', async () => {
+  it('lists the catalog grouped by the API group and selects a character', async () => {
     const { values } = renderSelect();
     await waitFor(() => expect(combobox()).toBeEnabled());
 
     fireEvent.mouseDown(combobox());
 
+    await screen.findByTitle(spiderMan.groupLabel);
+    const items = [
+      ...document.querySelectorAll<HTMLElement>(
+        '.ant-select-item-group, .ant-select-item-option',
+      ),
+    ].map((item) => item.title);
+    expect(items).toEqual([
+      spiderMan.groupLabel,
+      spiderMan.name,
+      batman.groupLabel,
+      batman.name,
+      hellboy.groupLabel,
+      hellboy.name,
+    ]);
     expect(
-      await screen.findByTitle(spiderMan.universeLabel),
-    ).toBeInTheDocument();
-    expect(screen.getByTitle(hellboy.universeLabel)).toBeInTheDocument();
-    fireEvent.click(await screen.findByTitle(spiderMan.name));
+      screen.getByTitle(hellboy.name).querySelector('img'),
+    ).toHaveAttribute('src', hellboy.avatarPath);
+    fireEvent.click(screen.getByTitle(spiderMan.name));
 
     expect(values).toEqual([spiderMan.code]);
   });

@@ -12,7 +12,7 @@ import {
   type StubResponse,
   stubHttpRoutes,
 } from '@/test/http-stub';
-import { characterCatalog, spiderMan } from '@/test/characters';
+import { batman, characterCatalog, spiderMan } from '@/test/characters';
 import { findDialog } from '@/test/find-dialog';
 import { renderRoute } from '@/test/render-route';
 
@@ -59,6 +59,34 @@ const passwordForm = () =>
 
 const fillField = (label: string, value: string, form = profileForm()) => {
   fireEvent.change(form.getByLabelText(label), { target: { value } });
+};
+
+const profilePreview = () =>
+  screen.getByRole('region', { name: i18n.t('account.profile.preview') });
+
+const previewImage = () => profilePreview().querySelector('img');
+
+const characterSelect = async () => {
+  const character = profileForm().getByLabelText(fieldLabels().character);
+  await waitFor(() => {
+    expect(character).toBeEnabled();
+  });
+
+  return character;
+};
+
+const clearCharacter = async () => {
+  const form = screen.getByRole('form', {
+    name: i18n.t('account.profile.title'),
+  });
+  await waitFor(() => {
+    expect(form.querySelector('.ant-select-clear')).not.toBeNull();
+  });
+  const clear = form.querySelector('.ant-select-clear');
+  if (!clear) throw new Error('Clear button is missing');
+  fireEvent.mouseDown(clear);
+  fireEvent.mouseUp(clear);
+  fireEvent.click(clear);
 };
 
 const saveButton = () =>
@@ -254,13 +282,8 @@ describe('AccountPage', () => {
       'PATCH /users/me': envelope({ ...user, character: spiderMan }),
     });
     await renderAccountPage();
-    const labels = fieldLabels();
 
-    const character = profileForm().getByLabelText(labels.character);
-    await waitFor(() => {
-      expect(character).toBeEnabled();
-    });
-    fireEvent.mouseDown(character);
+    fireEvent.mouseDown(await characterSelect());
     fireEvent.click(await screen.findByTitle(spiderMan.name));
     await save();
 
@@ -291,17 +314,7 @@ describe('AccountPage', () => {
         name: new RegExp(`${user.name} \\(${spiderMan.name}\\)`),
       }),
     ).toBeInTheDocument();
-    const form = screen.getByRole('form', {
-      name: i18n.t('account.profile.title'),
-    });
-    await waitFor(() => {
-      expect(form.querySelector('.ant-select-clear')).not.toBeNull();
-    });
-    const clear = form.querySelector('.ant-select-clear');
-    if (!clear) throw new Error('Clear button is missing');
-    fireEvent.mouseDown(clear);
-    fireEvent.mouseUp(clear);
-    fireEvent.click(clear);
+    await clearCharacter();
     await save();
 
     expect(
@@ -340,6 +353,80 @@ describe('AccountPage', () => {
     await waitFor(() => {
       expect(queryClient.getQueryData(sessionQuery.queryKey)).toEqual(user);
     });
+  });
+});
+
+describe('OwnProfilePreview', () => {
+  it('shows the avatar, the real name, and the character', async () => {
+    stubHttpRoutes(httpClient, {
+      ...signedInRoutes,
+      'GET /users/me': envelope({ ...user, character: spiderMan }),
+    });
+    await renderAccountPage();
+
+    const preview = within(profilePreview());
+    expect(previewImage()).toHaveAttribute('src', spiderMan.avatarPath);
+    expect(preview.getByText(user.name)).toBeInTheDocument();
+    expect(preview.getByText(spiderMan.name)).toBeInTheDocument();
+    expect(preview.getByText(spiderMan.universeLabel)).toBeInTheDocument();
+  });
+
+  it('shows the initials and no character without one', async () => {
+    stubHttpRoutes(httpClient, signedInRoutes);
+    await renderAccountPage();
+
+    const preview = within(profilePreview());
+    expect(previewImage()).toBeNull();
+    expect(preview.getByText('AL')).toBeInTheDocument();
+    expect(
+      preview.getByText(i18n.t('account.profile.noCharacter')),
+    ).toBeInTheDocument();
+  });
+
+  it('falls back to the initials when the character has no image', async () => {
+    stubHttpRoutes(httpClient, {
+      ...signedInRoutes,
+      'GET /users/me': envelope({
+        ...user,
+        character: { ...spiderMan, avatarPath: null },
+      }),
+    });
+    await renderAccountPage();
+
+    const preview = within(profilePreview());
+    expect(previewImage()).toBeNull();
+    expect(preview.getByText('AL')).toBeInTheDocument();
+    expect(preview.getByText(spiderMan.name)).toBeInTheDocument();
+  });
+
+  it('follows the selected character before saving', async () => {
+    const requests = stubHttpRoutes(httpClient, {
+      ...signedInRoutes,
+      'GET /users/me': envelope({ ...user, character: spiderMan }),
+    });
+    await renderAccountPage();
+
+    fireEvent.mouseDown(await characterSelect());
+    fireEvent.click(await screen.findByTitle(batman.name));
+
+    await waitFor(() => {
+      expect(previewImage()).toHaveAttribute('src', batman.avatarPath);
+    });
+    const preview = within(profilePreview());
+    expect(preview.getByText(batman.name)).toBeInTheDocument();
+    expect(preview.queryByText(spiderMan.name)).toBeNull();
+
+    await clearCharacter();
+
+    await waitFor(() => {
+      expect(previewImage()).toBeNull();
+    });
+    expect(preview.getByText('AL')).toBeInTheDocument();
+    expect(
+      preview.getByText(i18n.t('account.profile.noCharacter')),
+    ).toBeInTheDocument();
+    expect(preview.queryByText(batman.name)).toBeNull();
+    expect(requests.map(requestKey)).not.toContain('PATCH /users/me');
   });
 });
 

@@ -257,6 +257,14 @@ describe('real backend API contracts', () => {
     const characters = await fetchCharacters();
 
     expect(characters).toHaveLength(12);
+    expect(new Set(characters.map(({ group }) => group))).toEqual(
+      new Set(['MARVEL', 'DC', 'OTHERS']),
+    );
+    expect(
+      characters.every(({ avatarPath }) =>
+        avatarPath?.startsWith('/characters/'),
+      ),
+    ).toBe(true);
     const [first, second] = characters;
     const userRole = (await fetchRoles()).find(({ role }) => role === 'USER');
 
@@ -368,6 +376,10 @@ describe('real backend API contracts', () => {
 
     const original = await fetchRole(userRole.uuid);
     const abilities = [{ action: 'READ', subject: 'USER' }] as const;
+
+    expect(original.abilities).not.toContainEqual(
+      expect.objectContaining(abilities[0]),
+    );
 
     try {
       const updated = await updateRoleAbilities({

@@ -146,6 +146,18 @@ describe('HomePage', () => {
     expect(queryShortcut('changeRequests.title')).not.toBeInTheDocument();
   });
 
+  it('links a user without abilities only to their account', async () => {
+    renderHome({ roles: [], abilities: [] });
+
+    expect(await findShortcut('account.title')).toHaveAttribute(
+      'href',
+      AppRoutes.ACCOUNT,
+    );
+    expect(queryShortcut('navigation.users')).not.toBeInTheDocument();
+    expect(queryShortcut('navigation.roles')).not.toBeInTheDocument();
+    expect(queryShortcut('changeRequests.title')).not.toBeInTheDocument();
+  });
+
   it('links an admin to change requests with the pending count', async () => {
     renderHome({
       roles: [adminRole],

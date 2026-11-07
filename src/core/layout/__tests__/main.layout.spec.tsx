@@ -110,6 +110,37 @@ describe('MainLayout', () => {
     });
   });
 
+  it('hides the administration section without abilities', async () => {
+    stubHttpRoutes(httpClient, {
+      ...signedInRoutes,
+      'GET /users/me/abilities': envelope([]),
+    });
+
+    renderRoute(AppRoutes.HOME);
+
+    await within(await screen.findByRole('main')).findByRole('link', {
+      name: (name) => name.includes(i18n.t('account.title')),
+    });
+    const navigation = screen.getByRole('navigation', {
+      name: i18n.t('layout.navigation'),
+    });
+    expect(
+      within(navigation).getByRole('link', {
+        name: i18n.t('navigation.home'),
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(navigation).queryByRole('menuitem', {
+        name: i18n.t('navigationSections.administration'),
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(navigation).queryByRole('link', {
+        name: i18n.t('navigation.users'),
+      }),
+    ).not.toBeInTheDocument();
+  });
+
   it('opens the section of the current page', async () => {
     stubHttpRoutes(httpClient, signedInRoutes);
 

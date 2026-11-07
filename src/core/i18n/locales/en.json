@@ -169,7 +169,9 @@
       "confirmNewEmail": "Before signing in, confirm your new email address with the link we sent to it."
     },
     "profile": {
-      "title": "Profile"
+      "title": "Profile",
+      "preview": "Profile preview",
+      "noCharacter": "No character selected"
     },
     "access": {
       "title": "Access",

@@ -169,7 +169,9 @@
       "confirmNewEmail": "Antes de entrar, confirme seu novo endereço de e-mail pelo link que enviamos para ele."
     },
     "profile": {
-      "title": "Perfil"
+      "title": "Perfil",
+      "preview": "Prévia do perfil",
+      "noCharacter": "Nenhum personagem selecionado"
     },
     "access": {
       "title": "Acesso",

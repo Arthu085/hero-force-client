@@ -12,24 +12,24 @@ interface CharacterSelectProps {
   disabled?: boolean;
 }
 
-interface UniverseGroup {
+interface CharacterGroup {
   label: string;
   title: string;
   options: { value: string; label: string }[];
 }
 
-const groupByUniverse = (characters: Character[]) => {
-  const groups = new Map<string, UniverseGroup>();
+const groupCharacters = (characters: Character[]) => {
+  const groups = new Map<string, CharacterGroup>();
 
-  for (const { code, name, universe, universeLabel } of characters) {
-    const group = groups.get(universe) ?? {
-      label: universeLabel,
-      title: universeLabel,
+  for (const { code, name, group: key, groupLabel } of characters) {
+    const group = groups.get(key) ?? {
+      label: groupLabel,
+      title: groupLabel,
       options: [],
     };
 
     group.options.push({ value: code, label: name });
-    groups.set(universe, group);
+    groups.set(key, group);
   }
 
   return [...groups.values()];
@@ -59,7 +59,7 @@ export const CharacterSelect = ({
         allowClear
         showSearch={{ optionFilterProp: 'label' }}
         placeholder={t('characters.select.placeholder')}
-        options={groupByUniverse(characters)}
+        options={groupCharacters(characters)}
         optionRender={({ value, label }) => {
           const character = charactersByCode.get(String(value));
 

@@ -1,5 +1,6 @@
 import { Button, Flex, Form, Input } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useCharacters } from '@/modules/characters/infra/characters.queries';
 import { CharacterSelect } from '@/modules/characters/presentation/components/character-select';
 import { useFeedbackModal } from '@/shared/feedback/use-feedback-modal';
 import { zodRule } from '@/shared/forms/zod-rule';
@@ -12,6 +13,7 @@ import type { UserDetail } from '../../domain/user.schema';
 import { useUpdateOwnProfile } from '../../infra/users.queries';
 import { useSessionsEndedNotification } from '../use-sessions-ended-notification';
 import { AccountSectionTitle } from './account-section-title';
+import { OwnProfilePreview } from './own-profile-preview';
 
 interface OwnProfileFormProps {
   user: UserDetail;
@@ -26,6 +28,13 @@ export const OwnProfileForm = ({ user }: OwnProfileFormProps) => {
   const email = Form.useWatch('email', form);
   const characterCode = Form.useWatch('characterCode', form);
   const currentCharacterCode = user.character?.code ?? null;
+  const { data: characters = [] } = useCharacters();
+  const selectedCharacterCode =
+    characterCode === undefined ? currentCharacterCode : characterCode;
+  const selectedCharacter =
+    selectedCharacterCode === currentCharacterCode
+      ? user.character
+      : (characters.find(({ code }) => code === selectedCharacterCode) ?? null);
   const updateMutation = useUpdateOwnProfile();
   const emailChanged = !isSameEmail(email ?? user.email, user.email);
   const hasChanges =
@@ -58,6 +67,9 @@ export const OwnProfileForm = ({ user }: OwnProfileFormProps) => {
   return (
     <Flex vertical gap="middle">
       <AccountSectionTitle>{t('account.profile.title')}</AccountSectionTitle>
+      <OwnProfilePreview
+        user={{ name: user.name, character: selectedCharacter }}
+      />
       <Form<UpdateOwnProfileForm>
         aria-label={t('account.profile.title')}
         form={form}
