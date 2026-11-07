@@ -1,7 +1,7 @@
-import { Flex, Menu, type MenuProps, theme, Typography } from 'antd';
+import { Flex, Menu, type MenuProps, theme } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router';
-import { env } from '@/core/config/env.config';
+import { BrandLogo } from '@/core/branding/brand-logo';
 import { AppRoutes } from '@/core/router/app-routes';
 import { useAbilities } from '@/modules/authorization/infra/abilities.queries';
 import {
@@ -69,14 +69,8 @@ export const SidebarNavigation = ({
           whiteSpace: 'nowrap',
         }}
       >
-        <Link
-          to={AppRoutes.ROOT}
-          aria-label={collapsed ? env.appName : undefined}
-          onClick={onNavigate}
-        >
-          <Typography.Text strong>
-            {collapsed ? env.appMark : env.appName}
-          </Typography.Text>
+        <Link to={AppRoutes.ROOT} onClick={onNavigate}>
+          <BrandLogo compact={collapsed} />
         </Link>
       </Flex>
       <nav

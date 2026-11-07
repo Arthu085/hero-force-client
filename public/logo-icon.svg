@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="#000000" fill-rule="evenodd" role="img" aria-labelledby="logo-title logo-description">
+  <title id="logo-title">Hero Force</title>
+  <desc id="logo-description">A geometric shield enclosing a shared-stem HF monogram.</desc>
+  <path fill-rule="evenodd" d="M128 20 228 56v69c0 48-35 84-100 113C63 209 28 173 28 125V56Zm0 20L46 68v57c0 38 28 68 82 93 54-25 82-55 82-93V68Z"/>
+    <path d="M66 78h22v32h30V78h76l-8 22h-46v10h38l-8 22h-30v42h-22v-42H88v42H66Z"/>
+</svg>

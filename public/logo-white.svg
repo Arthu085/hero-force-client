@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="256" viewBox="0 0 1000 256" fill="#ffffff" fill-rule="evenodd" role="img" aria-labelledby="logo-title logo-description">
+  <title id="logo-title">Hero Force</title>
+  <desc id="logo-description">A geometric shield enclosing a shared-stem HF monogram, paired with a custom angular Hero Force wordmark.</desc>
+  <g><path fill-rule="evenodd" d="M128 20 228 56v69c0 48-35 84-100 113C63 209 28 173 28 125V56Zm0 20L46 68v57c0 38 28 68 82 93 54-25 82-55 82-93V68Z"/>
+    <path d="M66 78h22v32h30V78h76l-8 22h-46v10h38l-8 22h-30v42h-22v-42H88v42H66Z"/></g>
+  <g transform="translate(284 88)">
+    <path transform="translate(0)" d="M0 0h14v32h32V0h14v80H46V46H14v34H0Z"/>
+    <path transform="translate(74)" d="M0 0h54v14H14v18h34v14H14v20h40v14H0Z"/>
+    <path transform="translate(142)" d="M0 0h40l18 18v22L44 54l18 26H45L28 56H14v24H0Zm14 14v28h20l10-10V24L34 14Z"/>
+    <path transform="translate(218)" d="M16 0h30l16 16v48L46 80H16L0 64V16Zm4 14-6 6v40l6 6h22l6-6V20l-6-6Z"/>
+    <path transform="translate(312)" d="M0 0h54v14H14v20h34v14H14v32H0Z"/>
+    <path transform="translate(380)" d="M16 0h30l16 16v48L46 80H16L0 64V16Zm4 14-6 6v40l6 6h22l6-6V20l-6-6Z"/>
+    <path transform="translate(456)" d="M0 0h40l18 18v22L44 54l18 26H45L28 56H14v24H0Zm14 14v28h20l10-10V24L34 14Z"/>
+    <path transform="translate(532)" d="M16 0h28l16 16v10H46v-5l-7-7H21l-7 7v38l7 7h18l7-7v-5h14v10L44 80H16L0 64V16Z"/>
+    <path transform="translate(606)" d="M0 0h54v14H14v18h34v14H14v20h40v14H0Z"/>
+  </g>
+</svg>

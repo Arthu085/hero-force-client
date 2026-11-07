@@ -210,7 +210,7 @@ and whose bottom holds the theme toggle (see [Theme](#theme)) and a sign-out but
 name) that links to the account page and signs out. `MainLayout` only composes `MainSidebar` (side menu or drawer, rendering
 `SidebarNavigation`, `SidebarThemeToggle`, and `SidebarLogoutButton`) and `MainHeader` (sidebar toggle, language switcher,
 and `UserMenu`), and holds the sidebar state both share. The toggle collapses the side menu into an
-icon-only rail (the title becomes a short mark) and expands it again. Hovering an entry shows its
+icon-only rail (the full logo becomes the HF shield) and expands it again. Hovering an entry shows its
 full name: a tooltip in the rail and the link `title` in the expanded menu, where long names are cut. The side menu starts expanded,
 and `useSidebarCollapsed` stores the choice in `localStorage` (`sidebar-collapsed`), so it survives
 reloads and sign-ins. Below the `lg` breakpoint there is no side menu: the toggle opens the same
@@ -521,6 +521,15 @@ drawer on small screens); the authentication pages keep `ThemeToggle`, a floatin
 it survives reloads and applies to other open tabs. `AppProviders` also sets the document's `color-scheme` and background
 to match the mode. Style components through theme tokens instead of hardcoded colors.
 
+### Branding
+
+`BrandLogo` (`src/core/branding/brand-logo.tsx`) displays the HF shield and Hero Force wordmark
+in the authentication card, expanded sidebar, and mobile navigation drawer. The collapsed sidebar
+uses only the shield. The transparent SVG assets in `public/logo.svg` and `public/logo-icon.svg`
+have white counterparts for dark mode; `BrandLogo` follows `useThemeMode()` and uses `VITE_APP_NAME`
+as the accessible image name. The artwork is fixed to Hero Force; the environment name does not
+change the SVG wordmark. `VITE_APP_MARK` supplies the installed PWA's short name.
+
 ### Progressive web app
 
 `vite-plugin-pwa` turns the application into an installable app, in builds and in development.
@@ -536,8 +545,8 @@ to match the mode. Style components through theme tokens instead of hardcoded co
 - **Manifest:** generated from `VITE_APP_NAME` (`name`) and `VITE_APP_MARK`
   (`short_name`), with `display: standalone`, `lang: pt-BR`, and white theme and background colors.
   `index.html` declares a white or black `theme-color` per `prefers-color-scheme`.
-- **Icons:** `public/favicon.svg` (Vite's default logo) is the only source image.
-  `@vite-pwa/assets-generator` (`minimal-2023` preset) generates the favicon, PWA, maskable, and
+- **Icons:** `public/favicon.svg` contains the HF shield on a white background and is the source
+  image for generated app icons. `@vite-pwa/assets-generator` (`minimal-2023` preset) generates the favicon, PWA, maskable, and
   Apple touch icons, served by the dev server and written by the build, which also injects their
   `<link>` tags into `index.html`. Replace the SVG to rebrand; the generated PNGs are not committed.
 - **Caching:** the Workbox service worker precaches the built application shell (scripts, styles,
