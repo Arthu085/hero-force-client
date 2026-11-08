@@ -190,6 +190,27 @@
     },
     "validation": {
       "progress": "Enter a whole number from 0 to 100."
+    },
+    "history": {
+      "title": "History",
+      "view": "View history",
+      "pageTitle": "{{name}} — History",
+      "back": "Back to project",
+      "loading": "Loading history",
+      "empty": "No project changes recorded yet.",
+      "actor": "By {{name}}",
+      "removedActor": "a removed user",
+      "retry": "Try again",
+      "loadMore": "Load more",
+      "events": {
+        "PROJECT_CREATED": "Project created",
+        "PROJECT_NAME_CHANGED": "Project name changed",
+        "PROJECT_DESCRIPTION_CHANGED": "Project description changed",
+        "RESPONSIBLE_HERO_CHANGED": "Responsible hero reassigned",
+        "GOAL_DESCRIPTION_CHANGED": "Goal description changed",
+        "GOAL_PROGRESS_CHANGED": "Goal progress changed",
+        "PROJECT_DELETED": "Project deleted"
+      }
     }
   },
   "users": {

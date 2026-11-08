@@ -10,7 +10,11 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { httpClient } from '@/core/http/http-client';
 import i18n from '@/core/i18n/i18n.config';
-import { AppRoutes, projectDetailsPath } from '@/core/router/app-routes';
+import {
+  AppRoutes,
+  projectDetailsPath,
+  projectHistoryPath,
+} from '@/core/router/app-routes';
 import type { Ability } from '@/modules/authorization/domain/ability.schema';
 import type { Role } from '@/modules/authorization/domain/role.schema';
 import type { UserDetail } from '@/modules/users/domain/user.schema';
@@ -150,6 +154,7 @@ const renderProjects = (
     'GET /projects/statistics': envelope(statistics),
     'GET /projects/heroes': paginated([peter, grace]),
     [`GET /projects/${project.uuid}`]: envelope(projectDetail),
+    [`GET /projects/${project.uuid}/history`]: paginated([]),
     ...routes,
   });
   const rendered = renderRoute(path);
@@ -573,13 +578,124 @@ describe('Projects dashboard', () => {
   });
 });
 
+describe('Project history page', () => {
+  afterEach(async () => {
+    await i18n.changeLanguage('pt-BR');
+  });
+
+  it.each(['pt-BR', 'en'])(
+    'opens history from details and returns to the project in %s',
+    async (language) => {
+      await i18n.changeLanguage(language);
+      const { router, sent } = renderProjects(
+        projectDetailsPath(project.uuid),
+        {
+          roles: [userRole],
+          abilities: projectAbilities(['READ']),
+        },
+      );
+      const historyLink = await screen.findByRole('link', {
+        name: i18n.t('projects.history.view'),
+      });
+      expect(historyLink).toHaveAttribute(
+        'href',
+        projectHistoryPath(project.uuid),
+      );
+      expect(sent(`GET /projects/${project.uuid}/history`)).toHaveLength(0);
+      fireEvent.click(historyLink);
+
+      expect(
+        await screen.findByRole('heading', {
+          name: i18n.t('projects.history.pageTitle', { name: project.name }),
+        }),
+      ).toBeInTheDocument();
+      expect(
+        await screen.findByText(i18n.t('projects.history.empty')),
+      ).toBeInTheDocument();
+      expect(router.state.location.pathname).toBe(
+        projectHistoryPath(project.uuid),
+      );
+      fireEvent.click(
+        screen.getByRole('link', { name: i18n.t('projects.history.back') }),
+      );
+
+      expect(
+        await screen.findByRole('heading', { name: project.name }),
+      ).toBeInTheDocument();
+      expect(router.state.location.pathname).toBe(
+        projectDetailsPath(project.uuid),
+      );
+      expect(
+        screen.queryByText(i18n.t('projects.history.empty')),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  it.each([adminRole, userRole])(
+    'allows direct history navigation for $role with project read access',
+    async (role) => {
+      renderProjects(projectHistoryPath(project.uuid), {
+        roles: [role],
+        abilities: projectAbilities(['READ']),
+      });
+
+      expect(
+        await screen.findByRole('heading', {
+          name: i18n.t('projects.history.pageTitle', { name: project.name }),
+        }),
+      ).toBeInTheDocument();
+      expect(
+        await screen.findByText(i18n.t('projects.history.empty')),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', {
+          name: i18n.t('projects.actions.editProject'),
+        }),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  it('requires project read access before fetching project or history data', async () => {
+    const { sent } = renderProjects(projectHistoryPath(project.uuid), {
+      abilities: [],
+    });
+
+    expect(
+      await screen.findByText(i18n.t('forbidden.title')),
+    ).toBeInTheDocument();
+    expect(sent(`GET /projects/${project.uuid}`)).toHaveLength(0);
+    expect(sent(`GET /projects/${project.uuid}/history`)).toHaveLength(0);
+  });
+
+  it('shows the project error without loading history for an inaccessible project', async () => {
+    const { sent } = renderProjects(projectHistoryPath(project.uuid), {
+      roles: [userRole],
+      abilities: projectAbilities(['READ']),
+      routes: {
+        [`GET /projects/${project.uuid}`]: {
+          status: 404,
+          data: { message: 'Projeto não encontrado' },
+        },
+      },
+    });
+
+    expect(
+      await screen.findByText('Projeto não encontrado'),
+    ).toBeInTheDocument();
+    expect(sent(`GET /projects/${project.uuid}/history`)).toHaveLength(0);
+    expect(
+      screen.queryByText(i18n.t('projects.history.empty')),
+    ).not.toBeInTheDocument();
+  });
+});
+
 describe('Project details', () => {
   afterEach(async () => {
     await i18n.changeLanguage('pt-BR');
   });
 
-  it('shows the description, hero, overall progress, and every goal', async () => {
-    renderProjects(projectDetailsPath(project.uuid), {
+  it('shows the description, hero, overall progress, every goal, and a history link', async () => {
+    const { sent } = renderProjects(projectDetailsPath(project.uuid), {
       roles: [userRole],
       abilities: projectAbilities(['READ']),
     });
@@ -591,6 +707,13 @@ describe('Project details', () => {
     expect(main).toHaveTextContent(projectDetail.description);
     expect(main).toHaveTextContent('Peter Parker (Spider-Man)');
     expect(main).toHaveTextContent('Ship weekly');
+    expect(
+      within(main).getByRole('link', { name: i18n.t('projects.history.view') }),
+    ).toHaveAttribute('href', projectHistoryPath(project.uuid));
+    expect(
+      screen.queryByText(i18n.t('projects.history.empty')),
+    ).not.toBeInTheDocument();
+    expect(sent(`GET /projects/${project.uuid}/history`)).toHaveLength(0);
     for (const goal of projectGoalTypeSchema.options) {
       expect(
         within(main).getByRole('progressbar', {
@@ -667,7 +790,7 @@ describe('Project details', () => {
   });
 
   it('shows the API error for a project outside the hero scope', async () => {
-    renderProjects(projectDetailsPath(project.uuid), {
+    const { sent } = renderProjects(projectDetailsPath(project.uuid), {
       roles: [userRole],
       abilities: projectAbilities(['READ']),
       routes: {
@@ -681,6 +804,7 @@ describe('Project details', () => {
     expect(
       await screen.findByText('Projeto não encontrado'),
     ).toBeInTheDocument();
+    expect(sent(`GET /projects/${project.uuid}/history`)).toHaveLength(0);
   });
 
   it('keeps the dashboard entry selected in the sidebar', async () => {

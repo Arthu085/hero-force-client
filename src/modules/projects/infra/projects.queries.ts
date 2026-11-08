@@ -1,6 +1,7 @@
 import {
   keepPreviousData,
   queryOptions,
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
@@ -11,6 +12,7 @@ import {
   createProject,
   deleteProject,
   fetchProject,
+  fetchProjectHistory,
   fetchProjectHeroes,
   fetchProjects,
   fetchProjectStatistics,
@@ -30,6 +32,17 @@ export const projectQuery = (uuid: string) =>
   });
 
 export const useProject = (uuid: string) => useQuery(projectQuery(uuid));
+
+export const useProjectHistory = (uuid: string) =>
+  useInfiniteQuery({
+    queryKey: [...projectsKey, 'history', uuid],
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) =>
+      fetchProjectHistory(uuid, { page: pageParam, limit: 20 }),
+    getNextPageParam: ({ meta }) =>
+      meta.page * meta.limit < meta.total ? meta.page + 1 : undefined,
+    staleTime: 0,
+  });
 
 export const useProjects = (
   params: ProjectListParams,

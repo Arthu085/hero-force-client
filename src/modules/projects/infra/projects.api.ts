@@ -14,6 +14,10 @@ import type {
   ProjectGoalsPayload,
 } from '../domain/project-form.schemas';
 import {
+  type ProjectHistoryEntry,
+  projectHistoryEntrySchema,
+} from '../domain/project-history.schema';
+import {
   type ProjectDetail,
   projectDetailSchema,
   type ProjectHero,
@@ -57,6 +61,17 @@ export const fetchProject = async (uuid: string): Promise<ProjectDetail> => {
   const response = await httpClient.get<unknown>(`/projects/${uuid}`);
 
   return parseApiData(projectDetailSchema, response.data);
+};
+
+export const fetchProjectHistory = async (
+  uuid: string,
+  params: { page: number; limit: number },
+): Promise<PaginatedResponse<ProjectHistoryEntry>> => {
+  const response = await httpClient.get<unknown>(`/projects/${uuid}/history`, {
+    params,
+  });
+
+  return parsePaginatedResponse(projectHistoryEntrySchema, response.data);
 };
 
 export const fetchProjectStatistics = async (): Promise<ProjectStatistics> => {
