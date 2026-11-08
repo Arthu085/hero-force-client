@@ -9,48 +9,16 @@ administration interface. It consumes the
 enforces permissions, and calculates project progress. The two repositories have separate setup
 and validation.
 
-## Features
+## Quick start
 
-- **Authentication:** public registration, email confirmation, sign-in, sign-out, password recovery,
-  and automatic session refresh through the API's cookie-based authentication.
-- **Superhero identities:** an optional character from a fixed catalog, with character selection and
-  avatars alongside users' real names.
-- **Projects and dashboard:** project counts by status, average progress, a searchable and sortable
-  project list, status filters, and project details. Administrators can create, edit, reassign, and
-  delete projects; other users see only projects assigned to them.
-- **Six fixed goals:** Agility, Delight, Efficiency, Excellence, Transparency, and Ambition. Each has
-  an optional description and progress from 0 to 100. Administrators edit goal progress; the API
-  automatically calculates overall progress as the equally weighted average rounded down and sets
-  the status to Pending, In progress, or Completed. Overall progress and status are read-only.
-- **User and account management:** permission-controlled user administration, activation and
-  deactivation, email verification, role assignment, self-service profile and password changes, and
-  approval requests for changes to another administrator.
-- **Roles and permissions:** view the fixed role catalog and edit permitted role grants. Navigation,
-  routes, and actions follow effective abilities; project changes additionally require `ADMIN`.
-  The API enforces access, including project visibility. The default `USER` role can read assigned
-  projects, and `ADMIN` can manage all projects. The `ADMIN` grants are fixed and read-only.
-- **Interface:** responsive navigation, Portuguese (`pt-BR`) and English, light and dark themes, and
-  an installable progressive web app with update prompts and an offline warning. The application
-  shell can load offline after a production build; project data and actions require the API.
-
-## Technology stack
-
-- React 19, TypeScript with strict checking, and Vite.
-- Ant Design 6 and React Router.
-- TanStack Query for server state, Axios for credentialed HTTP requests, and Zod for runtime
-  validation of API responses, forms, and environment configuration.
-- i18next and react-i18next for localization; vite-plugin-pwa for installation and shell caching.
-- Vitest, Testing Library, and jsdom; ESLint, Prettier, and GitHub Actions CI.
-- Node.js 24 and npm.
-
-## Prerequisites
+### Prerequisites
 
 - Node.js 24 and npm. [`.nvmrc`](.nvmrc) selects Node 24; `package.json` requires `^24.11.0`.
 - A running [Hero Force API](https://github.com/Arthu085/hero-force-api#quick-start) for interactive
   use. Its README covers PostgreSQL, email delivery, and Docker setup.
 - Docker and a backend checkout only for the [API integration tests](#api-integration-tests).
 
-## Quick start
+### Run the client
 
 From the repository root, select Node with nvm if you use it, then install and start the frontend:
 
@@ -72,6 +40,29 @@ only its assigned projects, so an administrator must assign a project before it 
 
 The frontend HTTP client appends `/api` to `VITE_API_URL`, sends credentials and the selected
 language, and handles CSRF tokens and session refresh automatically.
+
+## Features
+
+- **Authentication and accounts:** registration, email confirmation, sign-in, password recovery,
+  and profile management with automatic session refresh.
+- **Superhero identities:** choose a character and display its avatar alongside your name.
+- **Projects and dashboard:** browse projects, filter by status, and track totals and average progress.
+  Administrators manage all projects; heroes see their assigned projects.
+- **Six fixed goals:** track goal progress while the API calculates overall progress and status.
+- **Administration:** manage users, roles, and permissions, with approval requests for changes to
+  other administrators.
+- **Interface:** responsive navigation, Portuguese and English, light and dark themes, and an
+  installable progressive web app. Project data and actions require the API.
+
+## Technology stack
+
+- React 19, TypeScript with strict checking, and Vite.
+- Ant Design 6 and React Router.
+- TanStack Query for server state, Axios for credentialed HTTP requests, and Zod for runtime
+  validation of API responses, forms, and environment configuration.
+- i18next and react-i18next for localization; vite-plugin-pwa for installation and shell caching.
+- Vitest, Testing Library, and jsdom; ESLint, Prettier, and GitHub Actions CI.
+- Node.js 24 and npm.
 
 ## Environment
 
