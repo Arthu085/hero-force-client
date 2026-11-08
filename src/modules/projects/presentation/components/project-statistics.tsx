@@ -25,7 +25,7 @@ export const ProjectStatistics = () => {
   return (
     <Row gutter={[16, 16]}>
       {indicators.map(({ key, labelKey }) => (
-        <Col key={key} xs={12} md={8} xl={4}>
+        <Col key={key} xs={24} md={8} xl={4}>
           <Card size="small" style={{ height: '100%' }}>
             <Statistic
               title={t(labelKey)}
