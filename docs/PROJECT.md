@@ -338,6 +338,16 @@ same screens serve both and the frontend never filters by role.
   the dates, the overall progress, and each goal with its progress and description. A project
   outside the user's scope answers `404`, shown as an inline error. Deleting from this page
   returns to the projects dashboard.
+- **History:** the details page includes a read-only timeline from `GET /projects/:uuid/history`,
+  newest first, with the actor, localized date/time, and previous and new values. Project creation,
+  name and description edits, hero reassignment, goal description and progress edits, and deletion
+  have Portuguese and English labels. Goal progress shows both percentages. Load more retrieves
+  the next 20 entries; loading, empty, and retryable error states stay inside the History card.
+  Failed pagination keeps loaded entries visible. Changing the project uses a separate history
+  query, and successful project or goal edits refresh the timeline. A removed actor has a localized
+  fallback. The API applies the same visibility rules as project details; deleted projects remain
+  unavailable, including their retained history. Events begin when history is deployed; earlier
+  changes are not reconstructed.
 - **Goals:** the goals modal edits all six goals at once, each with a slider and a number input
   (integers 0–100) and an optional description; a blank description is sent as `null`. Overall
   progress and status are derived by the API and never edited. Every project mutation invalidates

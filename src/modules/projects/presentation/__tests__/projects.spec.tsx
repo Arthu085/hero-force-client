@@ -150,6 +150,7 @@ const renderProjects = (
     'GET /projects/statistics': envelope(statistics),
     'GET /projects/heroes': paginated([peter, grace]),
     [`GET /projects/${project.uuid}`]: envelope(projectDetail),
+    [`GET /projects/${project.uuid}/history`]: paginated([]),
     ...routes,
   });
   const rendered = renderRoute(path);
@@ -578,7 +579,7 @@ describe('Project details', () => {
     await i18n.changeLanguage('pt-BR');
   });
 
-  it('shows the description, hero, overall progress, and every goal', async () => {
+  it('shows the description, hero, overall progress, every goal, and history', async () => {
     renderProjects(projectDetailsPath(project.uuid), {
       roles: [userRole],
       abilities: projectAbilities(['READ']),
@@ -591,6 +592,10 @@ describe('Project details', () => {
     expect(main).toHaveTextContent(projectDetail.description);
     expect(main).toHaveTextContent('Peter Parker (Spider-Man)');
     expect(main).toHaveTextContent('Ship weekly');
+    expect(main).toHaveTextContent(i18n.t('projects.history.title'));
+    expect(
+      await within(main).findByText(i18n.t('projects.history.empty')),
+    ).toBeInTheDocument();
     for (const goal of projectGoalTypeSchema.options) {
       expect(
         within(main).getByRole('progressbar', {
@@ -667,7 +672,7 @@ describe('Project details', () => {
   });
 
   it('shows the API error for a project outside the hero scope', async () => {
-    renderProjects(projectDetailsPath(project.uuid), {
+    const { sent } = renderProjects(projectDetailsPath(project.uuid), {
       roles: [userRole],
       abilities: projectAbilities(['READ']),
       routes: {
@@ -681,6 +686,7 @@ describe('Project details', () => {
     expect(
       await screen.findByText('Projeto não encontrado'),
     ).toBeInTheDocument();
+    expect(sent(`GET /projects/${project.uuid}/history`)).toHaveLength(0);
   });
 
   it('keeps the dashboard entry selected in the sidebar', async () => {
@@ -723,7 +729,11 @@ describe('Project details', () => {
     const dialog = await findDialog(
       i18n.t('projects.goals.editTitle', { name: project.name }),
     );
+    await screen.findByText(i18n.t('projects.history.empty'));
     const detailRequests = sent(`GET /projects/${project.uuid}`).length;
+    const historyRequests = sent(
+      `GET /projects/${project.uuid}/history`,
+    ).length;
     fireEvent.click(
       within(dialog).getByRole('button', { name: i18n.t('common.save') }),
     );
@@ -733,6 +743,9 @@ describe('Project details', () => {
       expect(sent(`GET /projects/${project.uuid}`).length).toBeGreaterThan(
         detailRequests,
       );
+      expect(
+        sent(`GET /projects/${project.uuid}/history`).length,
+      ).toBeGreaterThan(historyRequests);
     });
   });
 

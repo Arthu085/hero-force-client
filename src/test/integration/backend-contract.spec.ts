@@ -21,6 +21,7 @@ import {
   deleteProject,
   fetchProject,
   fetchProjectHeroes,
+  fetchProjectHistory,
   fetchProjects,
   fetchProjectStatistics,
   updateProject,
@@ -548,6 +549,114 @@ describe('real backend API contracts', () => {
       await deleteProject(created.data.uuid);
     }
     await expectApiError(fetchProject(created.data.uuid), 404);
+  });
+
+  it('parses project history changes, skips no-ops, and paginates newest first', async () => {
+    const actor = await fetchSessionUser();
+    await login(backend.user);
+    const hero = await fetchSessionUser();
+    await login(backend.admin);
+    if (!actor || !hero) throw new Error('Missing history contract users.');
+
+    const created = await createProject({
+      name: 'History contract project',
+      description: 'Initial description',
+      responsibleUuid: hero.uuid,
+    });
+    const uuid = created.data.uuid;
+
+    try {
+      const initial = await fetchProjectHistory(uuid, { page: 1, limit: 20 });
+      expect(initial.meta.total).toBe(1);
+      expect(initial.data[0]).toMatchObject({
+        type: 'PROJECT_CREATED',
+        actor: { uuid: actor.uuid, name: actor.name },
+        goal: null,
+        previousValues: null,
+        newValues: {
+          name: 'History contract project',
+          description: 'Initial description',
+          responsible: { uuid: hero.uuid, name: hero.name },
+        },
+      });
+
+      const update = {
+        uuid,
+        name: 'Renamed history project',
+        description: 'New description',
+      };
+      await updateProject(update);
+      await updateProject(update);
+      expect(
+        (await fetchProjectHistory(uuid, { page: 1, limit: 20 })).meta.total,
+      ).toBe(3);
+      await updateProjectGoals({
+        uuid,
+        goals: [{ goal: 'AGILITY', description: 'Ship weekly', progress: 20 }],
+      });
+      await updateProjectGoals({
+        uuid,
+        goals: [{ goal: 'AGILITY', description: 'Ship weekly', progress: 70 }],
+      });
+      await updateProjectGoals({
+        uuid,
+        goals: [{ goal: 'AGILITY', description: 'Ship weekly', progress: 70 }],
+      });
+
+      const first = await fetchProjectHistory(uuid, { page: 1, limit: 2 });
+      const second = await fetchProjectHistory(uuid, { page: 2, limit: 2 });
+      const third = await fetchProjectHistory(uuid, { page: 3, limit: 2 });
+      expect(first.meta).toMatchObject({ total: 6, page: 1, limit: 2 });
+      expect(first.data[0]).toMatchObject({
+        type: 'GOAL_PROGRESS_CHANGED',
+        goal: 'AGILITY',
+        previousValues: { progress: 20 },
+        newValues: { progress: 70 },
+      });
+      const entries = [...first.data, ...second.data, ...third.data];
+      expect(new Set(entries.map((entry) => entry.uuid)).size).toBe(6);
+      expect(entries.at(-1)?.type).toBe('PROJECT_CREATED');
+      expect(entries.map((entry) => entry.createdAt)).toEqual(
+        entries
+          .map((entry) => entry.createdAt)
+          .sort()
+          .reverse(),
+      );
+      expect(entries).toContainEqual(
+        expect.objectContaining({
+          type: 'PROJECT_NAME_CHANGED',
+          previousValues: { name: 'History contract project' },
+          newValues: { name: 'Renamed history project' },
+        }),
+      );
+      expect(entries).toContainEqual(
+        expect.objectContaining({
+          type: 'PROJECT_DESCRIPTION_CHANGED',
+          previousValues: { description: 'Initial description' },
+          newValues: { description: 'New description' },
+        }),
+      );
+      expect(entries).toContainEqual(
+        expect.objectContaining({
+          type: 'GOAL_DESCRIPTION_CHANGED',
+          goal: 'AGILITY',
+          previousValues: { description: null },
+          newValues: { description: 'Ship weekly' },
+        }),
+      );
+
+      await login(backend.user);
+      expect(
+        (await fetchProjectHistory(uuid, { page: 1, limit: 20 })).meta.total,
+      ).toBe(6);
+    } finally {
+      await login(backend.admin);
+      await deleteProject(uuid);
+    }
+    await expectApiError(
+      fetchProjectHistory(uuid, { page: 1, limit: 20 }),
+      404,
+    );
   });
 
   it('updates the profile and immediately ends its authenticated session', async () => {

@@ -190,6 +190,24 @@
     },
     "validation": {
       "progress": "Informe um número inteiro de 0 a 100."
+    },
+    "history": {
+      "title": "Histórico",
+      "loading": "Carregando histórico",
+      "empty": "Nenhuma alteração registrada neste projeto.",
+      "actor": "Por {{name}}",
+      "removedActor": "um usuário removido",
+      "retry": "Tentar novamente",
+      "loadMore": "Carregar mais",
+      "events": {
+        "PROJECT_CREATED": "Projeto criado",
+        "PROJECT_NAME_CHANGED": "Nome do projeto alterado",
+        "PROJECT_DESCRIPTION_CHANGED": "Descrição do projeto alterada",
+        "RESPONSIBLE_HERO_CHANGED": "Herói responsável reatribuído",
+        "GOAL_DESCRIPTION_CHANGED": "Descrição da meta alterada",
+        "GOAL_PROGRESS_CHANGED": "Progresso da meta alterado",
+        "PROJECT_DELETED": "Projeto excluído"
+      }
     }
   },
   "users": {

@@ -27,6 +27,7 @@ import { useDeleteProject, useProject } from '../../infra/projects.queries';
 import { ProjectFormModal } from '../components/project-form.modal';
 import { ProjectGoalsModal } from '../components/project-goals.modal';
 import { ProjectHeroLabel } from '../components/project-hero-label';
+import { ProjectHistory } from '../components/project-history';
 import { ProjectProgress } from '../components/project-progress';
 import { ProjectStatusTag } from '../components/project-status-tag';
 import { useProjectPermissions } from '../use-project-permissions';
@@ -193,6 +194,7 @@ const ProjectDetailsContent = ({ project }: { project: ProjectDetail }) => {
           ))}
         </Flex>
       </Card>
+      <ProjectHistory projectUuid={project.uuid} />
       <ProjectFormModal
         open={editing}
         project={project}
