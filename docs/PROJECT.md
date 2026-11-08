@@ -330,7 +330,7 @@ same screens serve both and the frontend never filters by role.
   selector appears in the project form, which needs `CREATE` or `UPDATE` on `PROJECT`.
 - **Managing:** project management is reserved to administrators, as the API enforces:
   `useProjectPermissions` requires the `ADMIN` role and the matching ability on `PROJECT`, so a
-  regular user stays read-only even when their role is granted write abilities. `CREATE` shows New
+  regular user stays read-only. `CREATE` shows New
   project; `UPDATE` shows edit (the form loads the detail first and sends only changed fields, which
   is how a hero is reassigned) and Edit goals, placed on the details page's Goals card; `DELETE`
   shows delete with confirmation. Without them the screens are read-only.
@@ -484,7 +484,13 @@ entries so selectors keep the default role order. Role updates invalidate every 
   closes, the API's success message is shown, and the roles queries refetch. When the session user
   holds the role, their abilities refetch too, so the menu and guards follow. The API keeps
   sessions open here. A failed save opens the error dialog above the grid; the error body has no
-  machine-readable code, so the frontend does not tell its `403`s or `409`s apart.
+  machine-readable code, so the frontend displays the API's localized business error message.
+- **Project grants for User:** `CREATE`, `UPDATE`, and `DELETE` on `PROJECT` stay visible in the
+  catalog but are disabled for the `USER` role, with an explanation linked to each checkbox. Project
+  management requires `ADMIN`; `READ` on `PROJECT` remains configurable, and other grants remain
+  editable. The API rejects forbidden grants with `422`. When editing, any stale forbidden grants
+  are excluded from the selection and the saved replacement; read-only views still show the actual
+  server grants. The API migration removes existing forbidden grants.
 - **Read-only:** without `UPDATE` on `ROLE` the grid is disabled and has no save button. `ADMIN`'s
   grants are immutable (the API answers `403` whoever calls), so its grid is always read-only, with
   a note explaining why.

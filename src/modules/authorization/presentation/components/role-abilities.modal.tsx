@@ -8,7 +8,11 @@ import {
   hasAbility,
   isSameAbilitySet,
 } from '../../domain/ability.schema';
-import { isAdminRole, type Role } from '../../domain/role.schema';
+import {
+  canGrantRoleAbility,
+  isAdminRole,
+  type Role,
+} from '../../domain/role.schema';
 import { useAbilities, useAbilityCatalog } from '../../infra/abilities.queries';
 import { useRole, useUpdateRoleAbilities } from '../../infra/roles.queries';
 import { RoleAbilitiesGrid } from './role-abilities-grid';
@@ -75,7 +79,11 @@ const RoleAbilitiesContent = ({ role, onClose }: RoleAbilitiesContentProps) => {
   }
 
   const granted = roleQuery.data.abilities;
-  const value = selection ?? granted;
+  const value =
+    selection ??
+    (editable
+      ? granted.filter((ability) => canGrantRoleAbility(role, ability))
+      : granted);
   const changed = !isSameAbilitySet(value, granted);
 
   const save = () => {
@@ -102,6 +110,7 @@ const RoleAbilitiesContent = ({ role, onClose }: RoleAbilitiesContentProps) => {
         />
       )}
       <RoleAbilitiesGrid
+        role={role}
         catalog={catalog}
         value={value}
         disabled={!editable || updateMutation.isPending}

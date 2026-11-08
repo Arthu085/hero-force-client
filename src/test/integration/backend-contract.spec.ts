@@ -418,6 +418,58 @@ describe('real backend API contracts', () => {
     }
   });
 
+  it('rejects USER project management grants while allowing project READ changes', async () => {
+    const userRole = (await fetchRoles()).find(({ role }) => role === 'USER');
+
+    if (!userRole) {
+      throw new Error('The backend did not seed the USER role.');
+    }
+
+    const original = await fetchRole(userRole.uuid);
+    const readProject = { action: 'READ', subject: 'PROJECT' };
+    const otherGrants = original.abilities.filter(
+      ({ action, subject }) => action !== 'READ' || subject !== 'PROJECT',
+    );
+
+    try {
+      for (const action of ['CREATE', 'UPDATE', 'DELETE']) {
+        await expectApiError(
+          updateRoleAbilities({
+            uuid: userRole.uuid,
+            abilities: [...original.abilities, { action, subject: 'PROJECT' }],
+          }),
+          422,
+        );
+        expect((await fetchRole(userRole.uuid)).abilities).toEqual(
+          original.abilities,
+        );
+      }
+
+      const pairs = (abilities: typeof original.abilities) =>
+        abilities.map(({ action, subject }) => ({ action, subject }));
+
+      for (const abilities of [otherGrants, [...otherGrants, readProject]]) {
+        const updated = await updateRoleAbilities({
+          uuid: userRole.uuid,
+          abilities,
+        });
+
+        expect(pairs(updated.data.abilities)).toEqual(
+          expect.arrayContaining(pairs(abilities)),
+        );
+        expect(updated.data.abilities).toHaveLength(abilities.length);
+        expect(pairs((await fetchRole(userRole.uuid)).abilities)).toEqual(
+          expect.arrayContaining(pairs(abilities)),
+        );
+      }
+    } finally {
+      await updateRoleAbilities({
+        uuid: userRole.uuid,
+        abilities: original.abilities,
+      });
+    }
+  });
+
   it('manages a project, its goals, and the hero-scoped dashboard', async () => {
     await login(backend.user);
     const hero = await fetchSessionUser();

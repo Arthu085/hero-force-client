@@ -103,6 +103,7 @@
     "abilities": {
       "cell": "{{action}} {{subject}}",
       "adminImmutable": "As permissões do perfil Administrador são fixas e não podem ser alteradas.",
+      "userProjectRestricted": "Criar, atualizar e excluir projetos exige o perfil Administrador, por isso essas permissões não podem ser atribuídas ao perfil Usuário. O acesso de leitura aos projetos continua configurável.",
       "catalogRestricted": "Seu acesso não permite consultar o catálogo completo de permissões. Apenas as permissões atribuídas são exibidas; a edição exige acesso de leitura ao catálogo."
     },
     "select": {
