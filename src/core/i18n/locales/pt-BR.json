@@ -193,6 +193,9 @@
     },
     "history": {
       "title": "Histórico",
+      "view": "Ver histórico",
+      "pageTitle": "{{name}} — Histórico",
+      "back": "Voltar ao projeto",
       "loading": "Carregando histórico",
       "empty": "Nenhuma alteração registrada neste projeto.",
       "actor": "Por {{name}}",

@@ -338,7 +338,9 @@ same screens serve both and the frontend never filters by role.
   the dates, the overall progress, and each goal with its progress and description. A project
   outside the user's scope answers `404`, shown as an inline error. Deleting from this page
   returns to the projects dashboard.
-- **History:** the details page includes a read-only timeline from `GET /projects/:uuid/history`,
+- **History:** the View history button on project details opens `/projects/:uuid/history`,
+  guarded by `READ` on `PROJECT`, with a link back to the project. The page loads project details
+  before showing the read-only timeline from `GET /projects/:uuid/history`,
   newest first, with the actor, localized date/time, and previous and new values. Project creation,
   name and description edits, hero reassignment, goal description and progress edits, and deletion
   have Portuguese and English labels. Goal progress shows both percentages. Load more retrieves

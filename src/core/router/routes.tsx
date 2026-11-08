@@ -74,6 +74,14 @@ export const routes: RouteObject[] = [
                       ).ProjectDetailsPage,
                     }),
                   },
+                  {
+                    path: AppRoutes.PROJECT_HISTORY,
+                    lazy: async () => ({
+                      Component: (
+                        await import('@/modules/projects/presentation/pages/project-history.page')
+                      ).ProjectHistoryPage,
+                    }),
+                  },
                 ],
               },
               {

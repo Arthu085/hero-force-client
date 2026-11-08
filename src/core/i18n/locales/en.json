@@ -193,6 +193,9 @@
     },
     "history": {
       "title": "History",
+      "view": "View history",
+      "pageTitle": "{{name}} — History",
+      "back": "Back to project",
       "loading": "Loading history",
       "empty": "No project changes recorded yet.",
       "actor": "By {{name}}",

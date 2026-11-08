@@ -5,6 +5,7 @@ export const AppRoutes = {
   HOME: '/home',
   PROJECTS: '/projects',
   PROJECT_DETAILS: '/projects/:uuid',
+  PROJECT_HISTORY: '/projects/:uuid/history',
   USERS: '/users',
   ROLES: '/roles',
   ACCOUNT: '/account',
@@ -20,3 +21,6 @@ export const AppRoutes = {
 
 export const projectDetailsPath = (uuid: string) =>
   generatePath(AppRoutes.PROJECT_DETAILS, { uuid });
+
+export const projectHistoryPath = (uuid: string) =>
+  generatePath(AppRoutes.PROJECT_HISTORY, { uuid });

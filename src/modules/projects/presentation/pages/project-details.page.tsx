@@ -3,6 +3,7 @@ import {
   ArrowLeftOutlined,
   DeleteOutlined,
   EditOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
 import {
   Alert,
@@ -18,16 +19,21 @@ import {
 } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate, useParams } from 'react-router';
+import {
+  Link,
+  useHref,
+  useLinkClickHandler,
+  useNavigate,
+  useParams,
+} from 'react-router';
 import { getApiErrorMessage } from '@/core/http/api-error';
-import { AppRoutes } from '@/core/router/app-routes';
+import { AppRoutes, projectHistoryPath } from '@/core/router/app-routes';
 import { useFeedbackModal } from '@/shared/feedback/use-feedback-modal';
 import type { ProjectDetail } from '../../domain/project.schema';
 import { useDeleteProject, useProject } from '../../infra/projects.queries';
 import { ProjectFormModal } from '../components/project-form.modal';
 import { ProjectGoalsModal } from '../components/project-goals.modal';
 import { ProjectHeroLabel } from '../components/project-hero-label';
-import { ProjectHistory } from '../components/project-history';
 import { ProjectProgress } from '../components/project-progress';
 import { ProjectStatusTag } from '../components/project-status-tag';
 import { useProjectPermissions } from '../use-project-permissions';
@@ -59,6 +65,9 @@ const ProjectDetailsContent = ({ project }: { project: ProjectDetail }) => {
   const deleteMutation = useDeleteProject();
   const [editing, setEditing] = useState(false);
   const [editingGoals, setEditingGoals] = useState(false);
+  const historyPath = projectHistoryPath(project.uuid);
+  const historyHref = useHref(historyPath);
+  const followHistoryLink = useLinkClickHandler<HTMLElement>(historyPath);
 
   const formatDate = (value: string) =>
     new Date(value).toLocaleString(i18n.language);
@@ -73,6 +82,13 @@ const ProjectDetailsContent = ({ project }: { project: ProjectDetail }) => {
           <ProjectStatusTag status={project.status} />
         </Flex>
         <Flex gap="small" wrap>
+          <Button
+            href={historyHref}
+            onClick={followHistoryLink}
+            icon={<HistoryOutlined aria-hidden />}
+          >
+            {t('projects.history.view')}
+          </Button>
           {canManage('UPDATE') && (
             <Button icon={<EditOutlined />} onClick={() => setEditing(true)}>
               {t('projects.actions.editProject')}
@@ -194,7 +210,6 @@ const ProjectDetailsContent = ({ project }: { project: ProjectDetail }) => {
           ))}
         </Flex>
       </Card>
-      <ProjectHistory projectUuid={project.uuid} />
       <ProjectFormModal
         open={editing}
         project={project}
