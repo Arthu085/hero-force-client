@@ -103,6 +103,7 @@
     "abilities": {
       "cell": "{{action}} {{subject}}",
       "adminImmutable": "The Administrator role's permissions are fixed and cannot be changed.",
+      "userProjectRestricted": "Creating, updating, and deleting projects require the Administrator role, so these permissions cannot be assigned to the User role. Read access to projects remains configurable.",
       "catalogRestricted": "The complete permission catalog is unavailable with your access. Only the assigned permissions are shown; editing requires permission to read the catalog."
     },
     "select": {

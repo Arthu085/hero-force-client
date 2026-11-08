@@ -17,12 +17,16 @@ import type { Ability } from '../../domain/ability.schema';
 import type { Role, RoleDetail } from '../../domain/role.schema';
 import { getActionLabel, getSubjectLabel } from '../components/ability-labels';
 
-const abilityCatalog: Ability[] = ['USER', 'ROLE', 'ABILITY'].flatMap(
-  (subject) =>
-    ['CREATE', 'READ', 'UPDATE', 'DELETE'].map((action) => ({
-      action,
-      subject,
-    })),
+const abilityCatalog: Ability[] = [
+  'USER',
+  'ROLE',
+  'ABILITY',
+  'PROJECT',
+].flatMap((subject) =>
+  ['CREATE', 'READ', 'UPDATE', 'DELETE'].map((action) => ({
+    action,
+    subject,
+  })),
 );
 
 const adminRole: Role = {
@@ -332,6 +336,106 @@ describe('RolesPage', () => {
     expect(sent('GET /abilities')).toHaveLength(1);
   });
 
+  it('disables only forbidden USER project grants and explains each checkbox', async () => {
+    const { sent } = renderRoles();
+    const dialog = await openRole(userRole);
+
+    expect(
+      await within(dialog).findByText(
+        i18n.t('roles.abilities.userProjectRestricted'),
+      ),
+    ).toBeInTheDocument();
+    for (const ability of abilityCatalog) {
+      const checkbox = await cell(dialog, ability);
+
+      if (ability.subject === 'PROJECT' && ability.action !== 'READ') {
+        expect(checkbox).toBeDisabled();
+        expect(checkbox).not.toBeChecked();
+        expect(checkbox).toHaveAccessibleDescription(
+          i18n.t('roles.abilities.userProjectRestricted'),
+        );
+        fireEvent.click(checkbox);
+        expect(checkbox).not.toBeChecked();
+      } else {
+        expect(checkbox).toBeEnabled();
+      }
+    }
+    expect(saveButton(dialog)).toBeDisabled();
+    expect(sent(`PATCH /roles/${userRole.uuid}/abilities`)).toHaveLength(0);
+  });
+
+  it.each([false, true])(
+    'allows toggling READ PROJECT from granted=%s without changing other grants',
+    async (granted) => {
+      const readProject: Ability = { action: 'READ', subject: 'PROJECT' };
+      const otherGrants = abilityCatalog.filter(
+        ({ subject }) => subject !== 'PROJECT',
+      );
+      const initial = granted ? [...otherGrants, readProject] : otherGrants;
+      const expected = granted ? otherGrants : [...otherGrants, readProject];
+      const { sent } = renderRoles({
+        routes: {
+          [`GET /roles/${userRole.uuid}`]: envelope({
+            ...userDetail,
+            abilities: initial,
+          }),
+          [`PATCH /roles/${userRole.uuid}/abilities`]: envelope({
+            ...userDetail,
+            abilities: expected,
+          }),
+        },
+      });
+      const dialog = await openRole(userRole);
+      const checkbox = await cell(dialog, readProject);
+
+      expect(checkbox).toBeEnabled();
+      expect(checkbox).toHaveProperty('checked', granted);
+      expect(saveButton(dialog)).toBeDisabled();
+      fireEvent.click(checkbox);
+      fireEvent.click(saveButton(dialog));
+      await waitFor(() => {
+        expect(sent(`PATCH /roles/${userRole.uuid}/abilities`)).toHaveLength(1);
+      });
+      expect(
+        requestBody(sent(`PATCH /roles/${userRole.uuid}/abilities`)[0]),
+      ).toEqual({ abilities: expected });
+    },
+  );
+
+  it('excludes stale forbidden USER grants from the editable selection and replacement', async () => {
+    const otherGrants = abilityCatalog.filter(
+      ({ subject, action }) => subject !== 'PROJECT' || action === 'READ',
+    );
+    const { sent } = renderRoles({
+      routes: {
+        [`GET /roles/${userRole.uuid}`]: envelope({
+          ...userDetail,
+          abilities: abilityCatalog,
+        }),
+        [`PATCH /roles/${userRole.uuid}/abilities`]: envelope({
+          ...userDetail,
+          abilities: otherGrants,
+        }),
+      },
+    });
+    const dialog = await openRole(userRole);
+
+    for (const action of ['CREATE', 'UPDATE', 'DELETE']) {
+      const checkbox = await cell(dialog, { action, subject: 'PROJECT' });
+
+      expect(checkbox).toBeDisabled();
+      expect(checkbox).not.toBeChecked();
+    }
+    expect(saveButton(dialog)).toBeEnabled();
+    fireEvent.click(saveButton(dialog));
+    await waitFor(() => {
+      expect(sent(`PATCH /roles/${userRole.uuid}/abilities`)).toHaveLength(1);
+    });
+    expect(
+      requestBody(sent(`PATCH /roles/${userRole.uuid}/abilities`)[0]),
+    ).toEqual({ abilities: otherGrants });
+  });
+
   it('shows the API error message in a separate dialog and keeps the grid open when saving fails', async () => {
     renderRoles({
       routes: {
@@ -366,6 +470,17 @@ describe('RolesPage', () => {
     const readRoles = await cell(dialog, { action: 'READ', subject: 'ROLE' });
     expect(readRoles).toBeChecked();
     expect(readRoles).toBeDisabled();
+    for (const action of ['CREATE', 'READ', 'UPDATE', 'DELETE']) {
+      const checkbox = await cell(dialog, { action, subject: 'PROJECT' });
+
+      expect(checkbox).toBeChecked();
+      expect(checkbox).toBeDisabled();
+    }
+    expect(
+      within(dialog).queryByText(
+        i18n.t('roles.abilities.userProjectRestricted'),
+      ),
+    ).not.toBeInTheDocument();
     expect(
       within(dialog).queryByRole('button', { name: i18n.t('common.save') }),
     ).not.toBeInTheDocument();

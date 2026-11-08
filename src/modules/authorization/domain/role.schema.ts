@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { recordStatusSchema } from '@/shared/domain/record-status.schema';
-import { abilitySchema } from './ability.schema';
+import { type Ability, abilitySchema } from './ability.schema';
 
 export const roleSortBySchema = z.enum(['role', 'status', 'createdAt']);
 
@@ -24,3 +24,11 @@ export const isAdminRole = ({ role }: Pick<Role, 'role'>): boolean =>
 
 export const hasAdminRole = (roles: readonly Role[]): boolean =>
   roles.some(isAdminRole);
+
+export const canGrantRoleAbility = (
+  { role }: Pick<Role, 'role'>,
+  { action, subject }: Ability,
+): boolean =>
+  role !== 'USER' ||
+  subject !== 'PROJECT' ||
+  !['CREATE', 'UPDATE', 'DELETE'].includes(action);
