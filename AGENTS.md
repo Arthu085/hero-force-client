@@ -7,10 +7,11 @@ React Router, i18next, Vitest, ESLint, Prettier, npm.
 
 Always read [`docs/conventions.md`](docs/conventions.md). Then read what matches the area you change:
 
-| Area                                     | Document                             |
-| ---------------------------------------- | ------------------------------------ |
-| Purpose, scope, architecture, layout     | [`docs/PROJECT.md`](docs/PROJECT.md) |
-| Setup, npm commands, editor settings, CI | [`README.md`](README.md)             |
+| Area                                   | Document                             |
+| -------------------------------------- | ------------------------------------ |
+| Purpose, scope, architecture, layout   | [`docs/PROJECT.md`](docs/PROJECT.md) |
+| Setup, npm commands, editor settings   | [`README.md`](README.md)             |
+| Test suites, API integration tests, CI | [`docs/testing.md`](docs/testing.md) |
 
 ## Hard rules
 
