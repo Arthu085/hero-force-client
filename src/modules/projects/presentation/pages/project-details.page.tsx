@@ -204,7 +204,9 @@ const ProjectDetailsContent = ({ project }: { project: ProjectDetail }) => {
                 })}
               />
               <Typography.Text type="secondary">
-                {description ?? t('projects.goals.noDescription')}
+                {description?.trim()
+                  ? description
+                  : t('projects.goals.noDescription')}
               </Typography.Text>
             </Flex>
           ))}

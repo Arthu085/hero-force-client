@@ -733,6 +733,30 @@ describe('Project details', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('shows the missing description text for blank goal descriptions', async () => {
+    const blankDescriptions = ['', '   '];
+    renderProjects(projectDetailsPath(project.uuid), {
+      roles: [userRole],
+      abilities: projectAbilities(['READ']),
+      routes: {
+        [`GET /projects/${project.uuid}`]: envelope({
+          ...projectDetail,
+          goals: projectDetail.goals.map((goal, index) => ({
+            ...goal,
+            description: blankDescriptions[index] ?? null,
+          })),
+        }),
+      },
+    });
+
+    await screen.findByRole('heading', { name: project.name });
+    expect(
+      within(screen.getByRole('main')).getAllByText(
+        i18n.t('projects.goals.noDescription'),
+      ),
+    ).toHaveLength(projectDetail.goals.length);
+  });
+
   it('hides project management from a regular user granted write abilities', async () => {
     renderProjects(projectDetailsPath(project.uuid), { roles: [userRole] });
 
