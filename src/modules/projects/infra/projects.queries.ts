@@ -8,10 +8,12 @@ import {
 } from '@tanstack/react-query';
 import type { ApiResponse } from '@/core/http/api-envelope';
 import { useApiSuccessMessage } from '@/shared/feedback/use-api-success-message';
+import type { GoalProgressPeriod } from '../domain/project-goal-progress.schema';
 import {
   createProject,
   deleteProject,
   fetchProject,
+  fetchProjectGoalProgress,
   fetchProjectHistory,
   fetchProjectHeroes,
   fetchProjects,
@@ -41,6 +43,18 @@ export const useProjectHistory = (uuid: string) =>
       fetchProjectHistory(uuid, { page: pageParam, limit: 20 }),
     getNextPageParam: ({ meta }) =>
       meta.page * meta.limit < meta.total ? meta.page + 1 : undefined,
+    staleTime: 0,
+  });
+
+export const useProjectGoalProgress = (
+  uuid: string,
+  period: GoalProgressPeriod,
+) =>
+  useQuery({
+    queryKey: [...projectsKey, 'goal-progress', uuid, period],
+    queryFn: () => fetchProjectGoalProgress(uuid, period),
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey.includes(uuid) ? previous : undefined,
     staleTime: 0,
   });
 

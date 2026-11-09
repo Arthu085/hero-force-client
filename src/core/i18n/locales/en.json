@@ -211,6 +211,33 @@
         "GOAL_PROGRESS_CHANGED": "Goal progress changed",
         "PROJECT_DELETED": "Project deleted"
       }
+    },
+    "goalProgress": {
+      "title": "Goal progress evolution",
+      "period": "Period",
+      "periods": {
+        "7d": "7 days",
+        "30d": "30 days",
+        "90d": "90 days",
+        "all": "All"
+      },
+      "loading": "Loading goal progress",
+      "retry": "Try again",
+      "empty": "No goal progress has been recorded for this project yet. Progress changes are recorded from now on.",
+      "noChanges": "No goal progress changes in this period.",
+      "notRecorded": "Not recorded",
+      "unknownLegend": "Not recorded: progress before history tracking began is unknown.",
+      "chartLabel": "Goal progress chart. Use the arrow keys to move between changes.",
+      "chartSummary": "Progress of the six goals from {{from}} to {{to}}",
+      "readout": "{{date}}: {{values}}",
+      "legend": "Goals shown in the chart",
+      "showTable": "Show table",
+      "hideTable": "Hide table",
+      "table": {
+        "date": "Date",
+        "goal": "Goal",
+        "change": "Change"
+      }
     }
   },
   "users": {

@@ -14,6 +14,11 @@ import type {
   ProjectGoalsPayload,
 } from '../domain/project-form.schemas';
 import {
+  type GoalProgressPeriod,
+  type ProjectGoalProgress,
+  projectGoalProgressSchema,
+} from '../domain/project-goal-progress.schema';
+import {
   type ProjectHistoryEntry,
   projectHistoryEntrySchema,
 } from '../domain/project-history.schema';
@@ -72,6 +77,18 @@ export const fetchProjectHistory = async (
   });
 
   return parsePaginatedResponse(projectHistoryEntrySchema, response.data);
+};
+
+export const fetchProjectGoalProgress = async (
+  uuid: string,
+  period: GoalProgressPeriod,
+): Promise<ProjectGoalProgress> => {
+  const response = await httpClient.get<unknown>(
+    `/projects/${uuid}/history/goal-progress`,
+    { params: { period } },
+  );
+
+  return parseApiData(projectGoalProgressSchema, response.data);
 };
 
 export const fetchProjectStatistics = async (): Promise<ProjectStatistics> => {

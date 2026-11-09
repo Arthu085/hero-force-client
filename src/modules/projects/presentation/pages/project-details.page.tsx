@@ -32,6 +32,7 @@ import { useFeedbackModal } from '@/shared/feedback/use-feedback-modal';
 import type { ProjectDetail } from '../../domain/project.schema';
 import { useDeleteProject, useProject } from '../../infra/projects.queries';
 import { ProjectFormModal } from '../components/project-form.modal';
+import { ProjectGoalProgress } from '../components/project-goal-progress';
 import { ProjectGoalsModal } from '../components/project-goals.modal';
 import { ProjectHeroLabel } from '../components/project-hero-label';
 import { ProjectProgress } from '../components/project-progress';
@@ -210,6 +211,7 @@ const ProjectDetailsContent = ({ project }: { project: ProjectDetail }) => {
           ))}
         </Flex>
       </Card>
+      <ProjectGoalProgress projectUuid={project.uuid} />
       <ProjectFormModal
         open={editing}
         project={project}

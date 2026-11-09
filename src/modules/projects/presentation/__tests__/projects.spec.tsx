@@ -36,6 +36,7 @@ import {
   type ProjectListItem,
   type ProjectStatistics,
 } from '../../domain/project.schema';
+import type { ProjectGoalProgress } from '../../domain/project-goal-progress.schema';
 
 const adminRole: Role = {
   uuid: '0b7f8f0e-5d2a-4c3e-9f1a-1a2b3c4d5e6f',
@@ -112,6 +113,25 @@ const statistics: ProjectStatistics = {
   averageProgress: 42,
 };
 
+const goalProgress: ProjectGoalProgress = {
+  period: '30d',
+  from: '2026-01-01T00:00:00.000Z',
+  to: '2026-01-31T00:00:00.000Z',
+  recordedFrom: '2026-01-01T00:00:00.000Z',
+  goals: projectDetail.goals.map(({ goal, goalLabel, progress }) => ({
+    goal,
+    goalLabel,
+    startProgress: 0,
+    currentProgress: progress,
+    changes:
+      progress > 0
+        ? [{ at: '2026-01-02T00:00:00.000Z', previousProgress: 0, progress }]
+        : [],
+  })),
+};
+
+const goalProgressRoute = `GET /projects/${project.uuid}/history/goal-progress`;
+
 const goalLabel = (goal: ProjectGoal['goal']) =>
   i18n.t(`projects.goalTypes.${goal}`);
 
@@ -155,6 +175,7 @@ const renderProjects = (
     'GET /projects/heroes': paginated([peter, grace]),
     [`GET /projects/${project.uuid}`]: envelope(projectDetail),
     [`GET /projects/${project.uuid}/history`]: paginated([]),
+    [goalProgressRoute]: envelope(goalProgress),
     ...routes,
   });
   const rendered = renderRoute(path);
@@ -848,6 +869,7 @@ describe('Project details', () => {
       i18n.t('projects.goals.editTitle', { name: project.name }),
     );
     const detailRequests = sent(`GET /projects/${project.uuid}`).length;
+    const progressRequests = sent(goalProgressRoute).length;
     fireEvent.click(
       within(dialog).getByRole('button', { name: i18n.t('common.save') }),
     );
@@ -857,7 +879,46 @@ describe('Project details', () => {
       expect(sent(`GET /projects/${project.uuid}`).length).toBeGreaterThan(
         detailRequests,
       );
+      expect(sent(goalProgressRoute).length).toBeGreaterThan(progressRequests);
     });
+  });
+
+  it('shows the goal progress evolution below the goals for a regular user', async () => {
+    const { sent } = renderProjects(projectDetailsPath(project.uuid), {
+      roles: [userRole],
+      abilities: projectAbilities(['READ']),
+    });
+
+    const chart = await screen.findByRole('group', {
+      name: i18n.t('projects.goalProgress.chartLabel'),
+    });
+    const card = chart.closest<HTMLElement>('.ant-card');
+    if (!card) {
+      throw new Error('Goal progress card not found');
+    }
+    expect(card).toHaveTextContent(i18n.t('projects.goalProgress.title'));
+    for (const goal of projectGoalTypeSchema.options) {
+      expect(
+        within(card).getByRole('button', { name: goalLabel(goal) }),
+      ).toHaveAttribute('aria-pressed', 'true');
+    }
+    expect(sent(goalProgressRoute)[0].params).toEqual({ period: '30d' });
+  });
+
+  it('does not request goal progress for a project outside the hero scope', async () => {
+    const { sent } = renderProjects(projectDetailsPath(project.uuid), {
+      roles: [userRole],
+      abilities: projectAbilities(['READ']),
+      routes: {
+        [`GET /projects/${project.uuid}`]: {
+          status: 404,
+          data: { message: 'Projeto não encontrado' },
+        },
+      },
+    });
+
+    await screen.findByText('Projeto não encontrado');
+    expect(sent(goalProgressRoute)).toHaveLength(0);
   });
 
   it('lets an administrator update the goals', async () => {

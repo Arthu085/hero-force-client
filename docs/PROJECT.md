@@ -11,7 +11,8 @@ The Hero Force web client for the
 ## Stack
 
 - React 19 and TypeScript with strict checking; Vite for development and builds.
-- Ant Design 6 for UI components and theming.
+- Ant Design 6 for UI components and theming. Charts are small SVG components drawn with Ant Design
+  theme tokens; there is no charting library.
 - TanStack Query for server state, on top of an Axios HTTP client.
 - Zod for runtime validation of environment configuration, API responses, and forms.
 - React Router in data mode (`createBrowserRouter`).
@@ -350,6 +351,19 @@ same screens serve both and the frontend never filters by role.
   fallback. The API applies the same visibility rules as project details; deleted projects remain
   unavailable, including their retained history. Events begin when history is deployed; earlier
   changes are not reconstructed.
+- **Goal progress evolution:** below the goals, project details shows a step-line chart of the six
+  goals from `GET /projects/:uuid/history/goal-progress`, built from the recorded
+  `GOAL_PROGRESS_CHANGED` history events, never from invented values. A period selector picks 7
+  days, 30 days (default), 90 days, or All; the API starts each goal at its last known value before
+  the period, and changes at the same instant keep their recorded order. Each goal has a fixed
+  categorical color per theme and a distinct dash pattern, and the legend buttons hide or show a
+  goal without repainting the others. Hovering, tapping, or the arrow, Home, and End keys snap a
+  crosshair to a recorded instant; the tooltip and a polite live region list the localized date and
+  every visible goal's percentage. A table view lists each change. For projects created before
+  history tracking, the period before the first recorded event is hatched as "Not recorded"; a
+  project without any recorded history shows an empty state. Loading and retryable error states
+  stay inside the card, a period change keeps the previous chart dimmed until the new data
+  arrives, and goal edits refresh the chart through the project query invalidation.
 - **Goals:** the goals modal edits all six goals at once, each with a slider and a number input
   (integers 0–100) and an optional description; a blank description is sent as `null`. Overall
   progress and status are derived by the API and never edited. Every project mutation invalidates

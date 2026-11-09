@@ -20,6 +20,7 @@ import {
   createProject,
   deleteProject,
   fetchProject,
+  fetchProjectGoalProgress,
   fetchProjectHeroes,
   fetchProjectHistory,
   fetchProjects,
@@ -657,6 +658,79 @@ describe('real backend API contracts', () => {
       fetchProjectHistory(uuid, { page: 1, limit: 20 }),
       404,
     );
+  });
+
+  it('reconstructs goal progress evolution from recorded history', async () => {
+    await login(backend.user);
+    const hero = await fetchSessionUser();
+    await login(backend.admin);
+    if (!hero) throw new Error('Missing goal progress contract user.');
+
+    const created = await createProject({
+      name: 'Goal progress contract project',
+      description: 'Goal progress description',
+      responsibleUuid: hero.uuid,
+    });
+    const uuid = created.data.uuid;
+
+    try {
+      await updateProjectGoals({
+        uuid,
+        goals: [
+          { goal: 'AGILITY', description: null, progress: 20 },
+          { goal: 'DELIGHT', description: null, progress: 50 },
+        ],
+      });
+      await updateProjectGoals({
+        uuid,
+        goals: [{ goal: 'AGILITY', description: null, progress: 70 }],
+      });
+      await updateProjectGoals({
+        uuid,
+        goals: [{ goal: 'AGILITY', description: null, progress: 70 }],
+      });
+
+      const progress = await fetchProjectGoalProgress(uuid, 'all');
+      expect(progress.period).toBe('all');
+      expect(progress.recordedFrom).not.toBeNull();
+      expect(progress.goals.map(({ goal }) => goal)).toEqual([
+        'AGILITY',
+        'DELIGHT',
+        'EFFICIENCY',
+        'EXCELLENCE',
+        'TRANSPARENCY',
+        'AMBITION',
+      ]);
+      expect(progress.goals[0]).toMatchObject({
+        startProgress: 0,
+        currentProgress: 70,
+      });
+      expect(
+        progress.goals[0].changes.map(
+          ({ previousProgress, progress: value }) => [previousProgress, value],
+        ),
+      ).toEqual([
+        [0, 20],
+        [20, 70],
+      ]);
+      expect(progress.goals[2]).toMatchObject({
+        startProgress: 0,
+        currentProgress: 0,
+        changes: [],
+      });
+      expect(
+        (await fetchProjectGoalProgress(uuid, '7d')).goals[1].changes,
+      ).toHaveLength(1);
+
+      await login(backend.user);
+      expect(
+        (await fetchProjectGoalProgress(uuid, '30d')).goals[0].currentProgress,
+      ).toBe(70);
+    } finally {
+      await login(backend.admin);
+      await deleteProject(uuid);
+    }
+    await expectApiError(fetchProjectGoalProgress(uuid, 'all'), 404);
   });
 
   it('updates the profile and immediately ends its authenticated session', async () => {

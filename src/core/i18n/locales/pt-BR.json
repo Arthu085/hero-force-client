@@ -211,6 +211,33 @@
         "GOAL_PROGRESS_CHANGED": "Progresso da meta alterado",
         "PROJECT_DELETED": "Projeto excluído"
       }
+    },
+    "goalProgress": {
+      "title": "Evolução do progresso das metas",
+      "period": "Período",
+      "periods": {
+        "7d": "7 dias",
+        "30d": "30 dias",
+        "90d": "90 dias",
+        "all": "Tudo"
+      },
+      "loading": "Carregando o progresso das metas",
+      "retry": "Tentar novamente",
+      "empty": "Nenhum progresso de meta foi registrado neste projeto ainda. As alterações de progresso passam a ser registradas a partir de agora.",
+      "noChanges": "Nenhuma alteração de progresso das metas neste período.",
+      "notRecorded": "Sem registro",
+      "unknownLegend": "Sem registro: o progresso anterior ao início do histórico é desconhecido.",
+      "chartLabel": "Gráfico do progresso das metas. Use as setas para navegar entre as alterações.",
+      "chartSummary": "Progresso das seis metas de {{from}} a {{to}}",
+      "readout": "{{date}}: {{values}}",
+      "legend": "Metas exibidas no gráfico",
+      "showTable": "Mostrar tabela",
+      "hideTable": "Ocultar tabela",
+      "table": {
+        "date": "Data",
+        "goal": "Meta",
+        "change": "Alteração"
+      }
     }
   },
   "users": {
