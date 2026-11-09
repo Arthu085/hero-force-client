@@ -114,7 +114,8 @@ session's cookies with the previous session's tokens. Logout does not need it: i
 session anyway, and it needs a valid access token, so a `401` on it must be able to refresh.
 
 `getApiErrorMessage` returns the API's localized `message`, or a localized fallback for network,
-timeout, and unexpected errors. When an API error includes `auditId`, the message also displays
+timeout, and unexpected errors. DTO validation `400`s send `message` as an array of localized
+messages, which it joins with `; `. When an API error includes `auditId`, the message also displays
 a localized reference label with that value for support investigations.
 
 ### Server state
@@ -175,8 +176,8 @@ The `auth` module mirrors the API's cookie session; the browser never sees a tok
   the same for every address. A login rejected with `403` (the API's unconfirmed-email answer)
   opens an error dialog linking to that page with the typed email filled in.
 - **Forms:** Ant Design forms validate fields with Zod schemas from the module's `domain/` through
-  `zodRule` (`src/shared/forms/`). Length limits mirror the API: email up to 255 characters,
-  passwords up to 128, and new passwords at least 8. New passwords (reset, create user, and change
+  `zodRule` (`src/shared/forms/`). Length limits mirror the API: email up to 255 characters
+  with a local part up to 64, passwords up to 128, and new passwords at least 8. New passwords (reset, create user, and change
   own password) must also mix an ASCII lowercase letter, an ASCII uppercase letter, an ASCII digit,
   and a character that is not an ASCII letter or digit (`STRONG_PASSWORD_PATTERN`), as the API
   requires. A new password that is too short or misses a character class gets one message that
