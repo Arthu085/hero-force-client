@@ -2,7 +2,7 @@
 
 Rules for every change to this repository. Project scope and layout are in
 [`PROJECT.md`](PROJECT.md); setup, editor configuration, and commands are in
-[`README.md`](../README.md).
+[`README.md`](../README.md); test suites and CI are in [`testing.md`](testing.md).
 
 ## Scope and structure
 
@@ -70,8 +70,8 @@ npm run format:check && npm run lint:check && npm run typecheck && npm test && n
   `src/test/http-stub.ts` stubs routes by `METHOD /path`, and `src/test/render-route.tsx` renders
   the route tree at a path with a fresh query client.
 - The `src/test/integration/` suite is the exception: it checks real HTTP against a disposable
-  backend, runs in its own CI job, and is excluded from `npm test`. Setup and scope are in the
-  [README](../README.md#api-integration-tests).
+  backend, runs in its own CI job, and is excluded from `npm test`. Setup and scope are in
+  [`testing.md`](testing.md#api-integration-tests).
 - Media queries answer for a 1280px-wide viewport. To test a narrower screen, stub
   `window.matchMedia` with `createMatchMedia(width)` from `src/test/match-media.ts`.
 - Query the DOM by role and accessible name, and compare text with `i18n.t(...)` rather than

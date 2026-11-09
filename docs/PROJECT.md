@@ -552,6 +552,7 @@ change the SVG wordmark. `VITE_APP_MARK` supplies the installed PWA's short name
 ### Progressive web app
 
 `vite-plugin-pwa` turns the application into an installable app, in builds and in development.
+Installation works on `localhost` or HTTPS.
 
 - **Development:** `npm run dev` registers a development service worker (`devOptions.enabled`),
   generated into the ignored `dev-dist/` folder, and serves the manifest and generated icons, so
