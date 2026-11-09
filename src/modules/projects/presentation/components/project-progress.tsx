@@ -19,6 +19,7 @@ export const ProjectProgress = ({
     size={size}
     percent={percent}
     status={percent === PROJECT_PROGRESS_MAX ? 'success' : 'normal'}
+    format={() => `${percent}%`}
     aria-label={label}
     style={type === 'line' ? { minWidth: 120 } : undefined}
   />
